@@ -1,0 +1,89 @@
+[
+  {
+    "metadataOutputVersion" : "3.0",
+    "outputSchema" : [
+      {
+        "isOptional" : "0",
+        "formattedType" : "String",
+        "type" : "String",
+        "name" : "target",
+        "shortDescription" : ""
+      },
+      {
+        "isOptional" : "0",
+        "keyType" : "String",
+        "formattedType" : "Dictionary (String → Double)",
+        "type" : "Dictionary",
+        "name" : "targetProbability",
+        "shortDescription" : ""
+      }
+    ],
+    "modelParameters" : [
+
+    ],
+    "author" : "Celio Junior",
+    "specificationVersion" : 3,
+    "isUpdatable" : "0",
+    "stateSchema" : [
+
+    ],
+    "availability" : {
+      "macOS" : "10.14",
+      "tvOS" : "12.0",
+      "visionOS" : "1.0",
+      "watchOS" : "unavailable",
+      "iOS" : "12.0",
+      "macCatalyst" : "12.0"
+    },
+    "modelType" : {
+      "name" : "MLModelType_imageClassifier",
+      "structure" : [
+        {
+          "name" : "MLModelType_visionFeaturePrint"
+        },
+        {
+          "name" : "MLModelType_glmClassifier"
+        }
+      ]
+    },
+    "inputSchema" : [
+      {
+        "height" : "299",
+        "colorspace" : "BGR",
+        "isOptional" : "0",
+        "width" : "299",
+        "isColor" : "1",
+        "formattedType" : "Image (Color 299 × 299)",
+        "hasSizeFlexibility" : "0",
+        "type" : "Image",
+        "shortDescription" : "",
+        "name" : "image"
+      }
+    ],
+    "classLabels" : [
+      "battery",
+      "biological",
+      "brown-glass",
+      "cardboard",
+      "clothes",
+      "green-glass",
+      "metal",
+      "paper",
+      "plastic",
+      "shoes",
+      "trash",
+      "white-glass"
+    ],
+    "generatedClassName" : "EcoScanner_4",
+    "userDefinedMetadata" : {
+      "com.apple.coreml.model.preview.type" : "imageClassifier",
+      "com.apple.createml.training.started" : "2026-02-10T00:02:51Z",
+      "com.apple.createml.version" : "26.2.0",
+      "com.apple.createml.training.finished" : "2026-02-10T00:05:17Z",
+      "com.apple.createml.app.tag" : "175.7",
+      "com.apple.createml.model.created" : "2026-02-10T00:05:17Z",
+      "com.apple.createml.app.version" : "6.2"
+    },
+    "method" : "predict"
+  }
+]

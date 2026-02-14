@@ -1,0 +1,170 @@
+[
+  {
+    "id": "plastic_1",
+    "category": "plastic",
+    "fact": "fact.plastic_1",
+    "isPositive": false,
+    "source": "WWF"
+  },
+  {
+    "id": "plastic_2",
+    "category": "plastic",
+    "fact": "fact.plastic_2",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "plastic_3",
+    "category": "plastic",
+    "fact": "fact.plastic_3",
+    "isPositive": false,
+    "source": "National Geographic"
+  },
+  {
+    "id": "plastic_4",
+    "category": "plastic",
+    "fact": "fact.plastic_4",
+    "isPositive": true,
+    "source": "CEMPRE"
+  },
+  {
+    "id": "glass_1",
+    "category": "glass",
+    "fact": "fact.glass_1",
+    "isPositive": true,
+    "source": "Glass Packaging Institute"
+  },
+  {
+    "id": "glass_2",
+    "category": "glass",
+    "fact": "fact.glass_2",
+    "isPositive": false,
+    "source": "EPA"
+  },
+  {
+    "id": "glass_3",
+    "category": "glass",
+    "fact": "fact.glass_3",
+    "isPositive": true,
+    "source": "GPI"
+  },
+  {
+    "id": "glass_4",
+    "category": "glass",
+    "fact": "fact.glass_4",
+    "isPositive": true,
+    "source": "CEMPRE"
+  },
+  {
+    "id": "metal_1",
+    "category": "metal",
+    "fact": "fact.metal_1",
+    "isPositive": true,
+    "source": "Aluminum Association"
+  },
+  {
+    "id": "metal_2",
+    "category": "metal",
+    "fact": "fact.metal_2",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "metal_3",
+    "category": "metal",
+    "fact": "fact.metal_3",
+    "isPositive": true,
+    "source": "Aluminum Association"
+  },
+  {
+    "id": "metal_4",
+    "category": "metal",
+    "fact": "fact.metal_4",
+    "isPositive": true,
+    "source": "ABAL"
+  },
+  {
+    "id": "paper_1",
+    "category": "paper",
+    "fact": "fact.paper_1",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "paper_2",
+    "category": "paper",
+    "fact": "fact.paper_2",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "paper_3",
+    "category": "paper",
+    "fact": "fact.paper_3",
+    "isPositive": true,
+    "source": "CEMPRE"
+  },
+  {
+    "id": "cardboard_1",
+    "category": "cardboard",
+    "fact": "fact.cardboard_1",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "cardboard_2",
+    "category": "cardboard",
+    "fact": "fact.cardboard_2",
+    "isPositive": true,
+    "source": "AF&PA"
+  },
+  {
+    "id": "cardboard_3",
+    "category": "cardboard",
+    "fact": "fact.cardboard_3",
+    "isPositive": false,
+    "source": "CEMPRE"
+  },
+  {
+    "id": "biodegradable_1",
+    "category": "biodegradable",
+    "fact": "fact.biodegradable_1",
+    "isPositive": false,
+    "source": "IPCC"
+  },
+  {
+    "id": "biodegradable_2",
+    "category": "biodegradable",
+    "fact": "fact.biodegradable_2",
+    "isPositive": true,
+    "source": "EPA"
+  },
+  {
+    "id": "biodegradable_3",
+    "category": "biodegradable",
+    "fact": "fact.biodegradable_3",
+    "isPositive": true,
+    "source": "EMBRAPA"
+  },
+  {
+    "id": "electronic_1",
+    "category": "electronic",
+    "fact": "fact.electronic_1",
+    "isPositive": false,
+    "source": "UN Global E-waste Monitor"
+  },
+  {
+    "id": "electronic_2",
+    "category": "electronic",
+    "fact": "fact.electronic_2",
+    "isPositive": true,
+    "source": "European Commission"
+  },
+  {
+    "id": "electronic_3",
+    "category": "electronic",
+    "fact": "fact.electronic_3",
+    "isPositive": false,
+    "source": "WHO"
+  }
+]
