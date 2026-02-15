@@ -157,7 +157,11 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 - Size on disk: ~196 KB
 - Input: color image `299x299`, BGR
 - Output: `target` (label string) + `targetProbability` dictionary
-- Inference threshold: `confidence >= 0.3`
+- Inference gate: `confidence >= 0.50` for candidate processing
+- Display gate: `confidence >= 0.58` to show/switch category
+- Keep gate: current category can stay visible down to `0.50` (hysteresis)
+- Inference cadence: ~`5 FPS` (`minInferenceInterval = 0.20s`)
+- Region of interest: central `60%` (`x:0.2, y:0.2, width:0.6, height:0.6`)
 - Class labels in metadata:
   - `battery`, `biological`, `brown-glass`, `cardboard`, `clothes`, `green-glass`, `metal`, `paper`, `plastic`, `shoes`, `trash`, `white-glass`
 

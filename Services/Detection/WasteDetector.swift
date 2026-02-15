@@ -1,6 +1,7 @@
 import SwiftUI
 import Vision
 import CoreML
+import QuartzCore
 
 // MARK: - WasteDetector
 
@@ -12,10 +13,21 @@ class WasteDetector: ObservableObject {
     @Published private(set) var isProcessing: Bool = false
 
     nonisolated(unsafe) private var visionModel: VNCoreMLModel? = nil
+    nonisolated(unsafe) private var lastInferenceTimestamp: CFTimeInterval = 0
+    private var pendingCategory: WasteCategory? = nil
+    private var pendingCategoryHits: Int = 0
+    private var missedDetectionFrames: Int = 0
 
     enum SetupStatus: Sendable {
         case notStarted, loading, success, failed
     }
+
+    nonisolated private static let minInferenceInterval: CFTimeInterval = 0.20 // ~5 FPS
+    nonisolated private static let minDisplayConfidence: Double = 0.58
+    nonisolated private static let keepDisplayConfidence: Double = 0.50
+    nonisolated private static let minConsistentHitsToDisplay: Int = 2
+    nonisolated private static let clearAfterMissedFrames: Int = 3
+    nonisolated private static let roi = CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.6)
 }
 
 // MARK: - WasteDetectionResult
@@ -42,10 +54,14 @@ extension WasteDetector {
     }
 
     nonisolated func onImageReceived(buffer imageBuffer: CVImageBuffer) {
+        let now = CACurrentMediaTime()
+        guard now - lastInferenceTimestamp >= Self.minInferenceInterval else { return }
+        lastInferenceTimestamp = now
+
         guard let model = visionModel else { return }
         let result = Self.runInference(model: model, buffer: imageBuffer)
         Task { @MainActor [weak self] in
-            self?.currentDetection = result
+            self?.handleInferenceResult(result)
         }
     }
 
@@ -88,10 +104,63 @@ private extension WasteDetector {
         }
     }
 
+    func handleInferenceResult(_ result: WasteDetectionResult?) {
+        guard let result else {
+            pendingCategory = nil
+            pendingCategoryHits = 0
+            missedDetectionFrames += 1
+            if missedDetectionFrames >= Self.clearAfterMissedFrames {
+                currentDetection = nil
+            }
+            return
+        }
+
+        if let current = currentDetection, current.category == result.category {
+            if result.confidence >= Self.keepDisplayConfidence {
+                missedDetectionFrames = 0
+                currentDetection = result
+            } else {
+                missedDetectionFrames += 1
+                if missedDetectionFrames >= Self.clearAfterMissedFrames {
+                    currentDetection = nil
+                }
+            }
+            pendingCategory = nil
+            pendingCategoryHits = 0
+            return
+        }
+
+        guard result.confidence >= Self.minDisplayConfidence else {
+            pendingCategory = nil
+            pendingCategoryHits = 0
+            missedDetectionFrames += 1
+            if missedDetectionFrames >= Self.clearAfterMissedFrames {
+                currentDetection = nil
+            }
+            return
+        }
+
+        missedDetectionFrames = 0
+
+        if pendingCategory == result.category {
+            pendingCategoryHits += 1
+        } else {
+            pendingCategory = result.category
+            pendingCategoryHits = 1
+        }
+
+        if pendingCategoryHits >= Self.minConsistentHitsToDisplay {
+            currentDetection = result
+            pendingCategory = nil
+            pendingCategoryHits = 0
+        }
+    }
+
     /// Static function — no actor isolation, runs inline wherever called.
     nonisolated static func runInference(model: VNCoreMLModel, buffer: CVImageBuffer) -> WasteDetectionResult? {
         let request = VNCoreMLRequest(model: model)
         request.imageCropAndScaleOption = .centerCrop
+        request.regionOfInterest = Self.roi
 
         let handler = VNImageRequestHandler(cvPixelBuffer: buffer, options: [:])
 
@@ -104,7 +173,7 @@ private extension WasteDetector {
 
         guard let results = request.results as? [VNClassificationObservation],
               let topResult = results.first,
-              topResult.confidence >= 0.3 else { return nil }
+              topResult.confidence >= Float(Self.keepDisplayConfidence) else { return nil }
 
         guard let category = mapLabel(topResult.identifier) else { return nil }
 
