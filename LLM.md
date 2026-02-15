@@ -5,7 +5,7 @@ Last updated: 2026-02-15
 ## Project Overview
 
 **EcoScanner** is a Swift Playground App Package (`.swiftpm`) built for the Apple Swift Student Challenge.
-It uses camera + CoreML classification to identify recyclable materials in real time, then teaches disposal and tracks user impact through XP, levels, streaks, and achievements.
+It uses camera + CoreML detection/classification to identify recyclable materials in real time, then teaches disposal and tracks user impact through XP, levels, streaks, and achievements.
 
 - Format: Swift Playground App (`.swiftpm`)
 - Language: Swift 6 (`swift-tools-version: 6.0`, `swiftLanguageModes: [.version("6")]`)
@@ -14,6 +14,13 @@ It uses camera + CoreML classification to identify recyclable materials in real 
 - App category: Education
 - Main capability: Camera permission configured in `Package.swift`
 - Accent color config: system default (`accentColor: nil` in `Package.swift`)
+
+## Model Experiments Summary
+
+- Current integrated baseline in app: **v3-litterati-v2** (`80/46/53` on train/val/test, `61` on extra test).
+- Latest evaluated candidate (not promoted yet): **v3b-taco-v1 / MyObjectDetector 7** (`75/46/54` on fixed main test with 505 items, `12` on `extra_test_taco` with 144 items; evaluated on 2026-02-15).
+- Historical experiment log, dataset mappings, upsides/downsides, and model checksums:
+  - `MODEL_EXPERIMENTS.md`
 
 ## Current Architecture
 
@@ -67,7 +74,7 @@ AVCaptureSession frames
   -> ScannerAVCaptureView.Coordinator.captureOutput(...)
   -> WasteDetector.onImageReceived(buffer:) (~5 FPS)
   -> VNCoreMLRequest
-  -> top classification (confidence >= 0.50)
+  -> top recognized object (confidence >= 0.50)
   -> label mapping to WasteCategory
   -> confidence smoothing:
      - new display requires confidence >= 0.58 and 2 consistent hits
@@ -180,32 +187,32 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 ## ML Model Details (Current)
 
 - Resource: `Resources/MLModel/EcoScanner.mlmodelc`
-- Size on disk: ~92 KB
-- Input: color image `299x299`, BGR
-- Output: `target` (label string) + `targetProbability` dictionary
+- Source model integrated: `/Users/celio/Documents/untitled folder/EcoScannerObjDetec.mlmodel`
+- Source SHA-256: `ee295fd138815de11ed440011ecee16f26dba295d75c11417a0b632ae33ebc9d`
+- Compiled payload size: ~7.0 MB
+- Input: color image `299x299`, RGB (size-flexible)
+- Output: `confidence` (boxes x classes) + `coordinates` (boxes x `[x,y,width,height]`)
+- Model preview type: `objectDetector`
+- Model classes: `BIODEGRADABLE`, `CARDBOARD`, `GLASS`, `METAL`, `PAPER`, `PLASTIC`
 - Inference gate: `confidence >= 0.50` for candidate processing
 - Display gate: `confidence >= 0.58` to show/switch category
 - Keep gate: current category can stay visible down to `0.50` (hysteresis)
 - Inference cadence: ~`5 FPS` (`minInferenceInterval = 0.20s`)
 - Region of interest: central `60%` (`x:0.2, y:0.2, width:0.6, height:0.6`)
-- Class labels in metadata:
-  - `battery`, `biological`, `brown-glass`, `cardboard`, `clothes`, `green-glass`, `metal`, `paper`, `plastic`, `shoes`, `trash`, `white-glass`
 
 ### Label Mapping Behavior
 
 `WasteDetector.mapLabel` uses:
 
-- explicit mapping for all current model labels:
-  - `plastic` -> `.plastic`
-  - `glass`, `green-glass`, `brown-glass`, `white-glass` -> `.glass`
-  - `metal` -> `.metal`
-  - `paper` -> `.paper`
-  - `cardboard` -> `.cardboard`
-  - `battery` -> `.electronic`
-  - `biological` -> `.biodegradable`
-  - `clothes`, `shoes` -> `.textile`
-  - `trash` -> ignored (`nil`, non-recyclable)
-- plus a keyword fallback for legacy/free-form labels.
+- explicit mapping for current object detector labels:
+  - `PLASTIC` -> `.plastic`
+  - `GLASS` -> `.glass`
+  - `METAL` -> `.metal`
+  - `PAPER` -> `.paper`
+  - `CARDBOARD` -> `.cardboard`
+  - `BIODEGRADABLE` -> `.biodegradable`
+- unsupported labels are ignored (`nil`) to avoid scanner noise.
+- a legacy fallback mapping for old classifier labels is kept for compatibility.
 
 ## Localization
 
@@ -220,11 +227,11 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 
 ## Resources Snapshot
 
-- `Resources/MLModel/EcoScanner.mlmodelc`: ~92 KB
+- `Resources/MLModel/EcoScanner.mlmodelc`: ~7.1 MB
 - `Resources/Data/MaterialFacts.json`: 24 facts, ~4 KB
 - `Assets.xcassets`: ~5.8 MB
-- Project folder total: ~12 MB
-- Example full zip of folder (including git metadata): ~12 MB
+- Project folder total: ~19 MB
+- Example full zip of folder: ~18 MB
 
 ## Build and Run
 

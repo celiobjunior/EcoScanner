@@ -10,6 +10,7 @@ struct ScannerView: View {
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
     @EnvironmentObject private var profileManager: UserProfileManager
+    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = true
 
     @State private var showFeedback = false
     @State private var lastEntry: CollectionEntry?
@@ -168,45 +169,79 @@ private extension ScannerView {
 
     var topBar: some View {
         HStack {
-            HStack(spacing: .spacing.x2) {
-                Image(systemName: profileManager.profile.currentLevel.systemImage)
-                    .font(.system(size: .fontSize.medium))
-                    .foregroundColor(.ecoLight)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(profileManager.profile.currentLevel.displayName)
-                        .font(.system(size: .fontSize.xsmall, weight: .bold))
-                        .foregroundColor(.white)
-
-                    Text("common.xp_total".localized(with: profileManager.profile.totalXP))
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.78))
-                }
-            }
-            .padding(.horizontal, .spacing.x4)
-            .padding(.vertical, .spacing.x2)
-            .background(Capsule().fill(.ultraThinMaterial))
-            .overlay(Capsule().stroke(Color.surfaceStroke, lineWidth: 0.8))
+            statusInfoContainer
 
             Spacer()
 
-            if profileManager.profile.currentStreak > 0 {
-                HStack(spacing: .spacing.base) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.streakOrange)
-                    Text("\(profileManager.profile.currentStreak)")
-                        .font(.system(size: .fontSize.xsmall, weight: .bold))
-                        .foregroundColor(.streakOrange)
-                }
-                .padding(.horizontal, .spacing.x3)
-                .padding(.vertical, .spacing.x2)
-                .background(Capsule().fill(.ultraThinMaterial))
-                .overlay(Capsule().stroke(Color.surfaceStroke, lineWidth: 0.8))
-            }
+            debugBoxToggleButton
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.top, .spacing.x4)
+    }
+
+    var statusInfoContainer: some View {
+        GlassEffectContainer(spacing: .spacing.x2) {
+            HStack(spacing: .spacing.x2) {
+                levelCapsule
+                if profileManager.profile.currentStreak > 0 {
+                    streakCapsule
+                }
+            }
+        }
+    }
+
+    var levelCapsule: some View {
+        HStack(spacing: .spacing.x2) {
+            Image(systemName: profileManager.profile.currentLevel.systemImage)
+                .font(.system(size: .fontSize.medium))
+                .foregroundColor(.ecoLight)
+
+            VStack(alignment: .leading, spacing: 0) {
+                Text(profileManager.profile.currentLevel.displayName)
+                    .font(.system(size: .fontSize.xsmall, weight: .bold))
+                    .foregroundColor(.white)
+
+                Text("common.xp_total".localized(with: profileManager.profile.totalXP))
+                    .font(.system(size: 10))
+                    .foregroundColor(.white.opacity(0.78))
+            }
+        }
+        .padding(.horizontal, .spacing.x4)
+        .padding(.vertical, .spacing.x2)
+        .scannerCapsuleRegularGlass()
+    }
+
+    var streakCapsule: some View {
+        HStack(spacing: .spacing.base) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.streakOrange)
+            Text("\(profileManager.profile.currentStreak)")
+                .font(.system(size: .fontSize.xsmall, weight: .bold))
+                .foregroundColor(.streakOrange)
+        }
+        .padding(.horizontal, .spacing.x3)
+        .padding(.vertical, .spacing.x2)
+        .scannerCapsuleRegularGlass()
+    }
+
+    var debugBoxToggleButton: some View {
+        Button {
+            debugBoundingBoxEnabled.toggle()
+        } label: {
+            HStack(spacing: .spacing.base) {
+                Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("BOX")
+                    .font(.system(size: 10, weight: .bold))
+            }
+            .foregroundColor(debugBoundingBoxEnabled ? .ecoLight : .white.opacity(0.7))
+            .padding(.horizontal, .spacing.x3)
+            .padding(.vertical, .spacing.x2)
+            .scannerCapsuleClearInteractiveGlass()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Toggle detection debug box")
     }
 
     var scannerGuide: some View {
@@ -234,7 +269,7 @@ private extension ScannerView {
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.vertical, .spacing.x4)
-        .background(Capsule().fill(Color.black.opacity(0.72)))
+        .scannerCapsuleClearInteractiveGlass()
         .padding(.bottom, .spacing.x6)
     }
 
@@ -248,7 +283,7 @@ private extension ScannerView {
         .foregroundColor(.ecoSmoke)
         .padding(.horizontal, .spacing.x6)
         .padding(.vertical, .spacing.x3)
-        .background(Capsule().fill(Color.black.opacity(0.72)))
+        .scannerCapsuleClearInteractiveGlass()
         .padding(.bottom, .spacing.x6)
     }
 
@@ -385,6 +420,17 @@ private extension ScannerView {
                 notifications.removeAll { $0.id == banner.id }
             }
         }
+    }
+
+}
+
+private extension View {
+    func scannerCapsuleRegularGlass() -> some View {
+        self.glassEffect(.regular, in: .capsule(style: .continuous))
+    }
+
+    func scannerCapsuleClearInteractiveGlass() -> some View {
+        self.glassEffect(.clear.interactive(), in: .capsule(style: .continuous))
     }
 }
 
