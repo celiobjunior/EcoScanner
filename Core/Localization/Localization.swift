@@ -8,15 +8,13 @@ import Foundation
 public extension String {
 
     var localized: String {
-        let lang = Locale.current.language.languageCode?.identifier ?? "en"
         let key = self
 
-        if lang.hasPrefix("pt"),
-           let ptString = LocalizationStore.ptBR[key] {
-            return ptString
+        if LocalizationStore.shouldUsePortuguese {
+            return LocalizationStore.ptBR[key] ?? LocalizationStore.en[key] ?? key
         }
 
-        return LocalizationStore.en[key] ?? key
+        return LocalizationStore.en[key] ?? LocalizationStore.ptBR[key] ?? key
     }
 
     func localized(with arguments: CVarArg...) -> String {
@@ -28,6 +26,35 @@ public extension String {
 
 enum LocalizationStore {
 
+    /// Resolves the effective app language from iOS preferred languages and locale identifiers.
+    /// This is more reliable than relying only on Locale.current for iPad/iPhone language settings.
+    static var shouldUsePortuguese: Bool {
+        for identifier in resolvedLanguageIdentifiers() {
+            if identifier.hasPrefix("pt") { return true }
+            if identifier.hasPrefix("en") { return false }
+        }
+        return false
+    }
+
+    private static func resolvedLanguageIdentifiers() -> [String] {
+        var identifiers: [String] = []
+        identifiers.append(contentsOf: Locale.preferredLanguages)
+
+        if let code = Locale.autoupdatingCurrent.language.languageCode?.identifier {
+            identifiers.append(code)
+        }
+        if let code = Locale.current.language.languageCode?.identifier {
+            identifiers.append(code)
+        }
+
+        identifiers.append(Locale.autoupdatingCurrent.identifier)
+        identifiers.append(Locale.current.identifier)
+        identifiers.append(contentsOf: Bundle.main.preferredLocalizations)
+
+        return identifiers
+            .map { $0.replacingOccurrences(of: "_", with: "-").lowercased() }
+    }
+
     // MARK: English
 
     static let en: [String: String] = [
@@ -36,6 +63,8 @@ enum LocalizationStore {
         "navigation.scanner": "Scanner",
         "navigation.history": "History",
         "navigation.profile": "Profile",
+        "navigation.help": "Help",
+        "navigation.credits": "Credits",
 
         // Common formats
         "common.xp_total": "%d XP",
@@ -140,33 +169,73 @@ enum LocalizationStore {
         "profile.progress_decimal": "%.1f / %.1f",
 
         // Onboarding
-        "onboarding.page1.title": "Recycling Builds\nStrong Communities",
-        "onboarding.page1.subtitle": "Your daily choices improve neighborhoods, schools, and public spaces.",
-        "onboarding.page1.card1.title": "Social Impact in Every Item",
-        "onboarding.page1.card1.body": "Correct disposal keeps streets cleaner and helps prevent health risks in the community.",
-        "onboarding.page1.card2.title": "More Resilient Cities",
-        "onboarding.page1.card2.body": "Less landfill waste means fewer emissions and better environmental quality for everyone.",
-        "onboarding.page2.title": "Scan Fast,\nLearn Clearly",
-        "onboarding.page2.subtitle": "Use your camera to identify materials and act with confidence.",
-        "onboarding.page2.card1.title": "Instant Recognition",
-        "onboarding.page2.card1.body": "The model classifies common recyclable materials in seconds.",
-        "onboarding.page2.card2.title": "Practical Guidance",
-        "onboarding.page2.card2.body": "Receive clear instructions for sorting and proper disposal of each item.",
-        "onboarding.page3.title": "Turn Habits into\nCollective Change",
-        "onboarding.page3.subtitle": "Build routines that inspire your family, friends, and local community.",
-        "onboarding.page3.card1.title": "Visible Progress",
-        "onboarding.page3.card1.body": "Track your collections, XP growth, and avoided CO₂ over time.",
-        "onboarding.page3.card2.title": "Community Engagement",
-        "onboarding.page3.card2.body": "Use streaks and goals to keep everyone motivated in daily recycling actions.",
-        "onboarding.page4.title": "Ready for Your\nNext Scan?",
-        "onboarding.page4.subtitle": "EcoScanner transforms environmental awareness into practical impact.",
-        "onboarding.page4.card1.title": "From School to Neighborhood",
-        "onboarding.page4.card1.body": "Apply the app in classroom projects, events, and community initiatives.",
-        "onboarding.page4.card2.title": "Built for Real Utility",
-        "onboarding.page4.card2.body": "Designed for fast decisions that improve disposal quality every day.",
-        "onboarding.start_button": "Start Saving the Planet",
+        "onboarding.page1.title": "Selective Recycling\nMade Simple",
+        "onboarding.page1.subtitle": "EcoScanner's goal is to encourage correct selective disposal every day.",
+        "onboarding.page1.card1.title": "Why this app exists",
+        "onboarding.page1.card1.body": "It helps people build the habit of separating waste correctly at home, school, and work.",
+        "onboarding.page1.card2.title": "Every item matters",
+        "onboarding.page1.card2.body": "Consistent selective collection keeps recyclables out of regular trash and landfills.",
+        "onboarding.page2.title": "Discard First,\nThen Scan",
+        "onboarding.page2.subtitle": "After correct disposal, scan the discarded object to declare and register that action.",
+        "onboarding.page2.card1.title": "Step 1: Correct disposal",
+        "onboarding.page2.card1.body": "Put the item in the proper recycling stream before scanning.",
+        "onboarding.page2.card2.title": "Step 2: Declare with scan",
+        "onboarding.page2.card2.body": "The camera identifies the material and logs your correct disposal in the app.",
+        "onboarding.page3.title": "What Can Be\nScanned?",
+        "onboarding.page3.subtitle": "EcoScanner currently recognizes the categories below.",
+        "onboarding.page3.card1.title": "All supported categories",
+        "onboarding.page3.card1.body": "Use this list as a quick reference before scanning each item.",
+        "onboarding.page3.card2.title": "Growing recognition",
+        "onboarding.page3.card2.body": "If detection is uncertain, improve lighting and frame only one object.",
+        "onboarding.page4.title": "Build a Real\nSelective Routine",
+        "onboarding.page4.subtitle": "Track your collections and keep the selective recycling habit active every week.",
+        "onboarding.page4.card1.title": "Visible history",
+        "onboarding.page4.card1.body": "Review what you declared and monitor your positive impact over time.",
+        "onboarding.page4.card2.title": "Stay consistent",
+        "onboarding.page4.card2.body": "Use streaks and goals to keep selective recycling part of your routine.",
+        "onboarding.start_button": "Start Recycling",
         "onboarding.next": "Next",
         "onboarding.skip": "Skip",
+        "onboarding.categories.title": "Scannable categories",
+        "onboarding.categories.subtitle": "These are all material categories currently supported by recognition.",
+
+        // Guided first scan
+        "guided.scan.title": "Tutorial: First scan required",
+        "guided.scan.body": "Discard one item correctly, frame the object in camera, and tap scan to record the action.",
+        "guided.completion.title": "Perfect, your first scan is complete",
+        "guided.completion.body": "Great job. You registered a correct disposal. Keep scanning your recyclables to build a real selective recycling routine.",
+        "guided.completion.button": "Continue to EcoScanner",
+
+        // Help
+        "help.title": "Help & Tutorial",
+        "help.close": "Close",
+        "help.intro": "Need a quick recap? Here is what EcoScanner does and how to use it correctly.",
+        "help.card.objective.title": "App objective",
+        "help.card.objective.body": "EcoScanner encourages selective recycling by helping you identify materials and register correct disposal.",
+        "help.card.howto.title": "How it works",
+        "help.card.howto.body": "1) Discard in the correct stream. 2) Scan the discarded object. 3) Confirm and track your history.",
+        "help.card.categories.title": "Scannable categories",
+        "help.card.categories.body": "Plastic, glass, metal, paper, cardboard, electronic, biodegradable and textile.",
+        "help.open_credits": "Open Credits & Dedications",
+        "help.revisit_onboarding": "View Onboarding Again",
+        "help.revisit_hint": "This will restart onboarding and the first guided scan.",
+
+        // Credits
+        "credits.title": "Dedications & Credits",
+        "credits.intro": "EcoScanner uses open resources and community contributions. Special thanks to the sources below.",
+        "credits.section.datasets": "Open-source datasets",
+        "credits.section.project": "Project repository",
+        "credits.section.social": "Social links",
+        "credits.dataset.one.title": "Recycling Dataset (Humans in the Loop)",
+        "credits.dataset.one.detail": "Dataset source and references.",
+        "credits.dataset.two.title": "Waste Classification Dataset (Mendeley Data)",
+        "credits.dataset.two.detail": "Dataset source and references.",
+        "credits.project.repo.title": "EcoScanner on GitHub",
+        "credits.project.repo.detail": "Source code, issues and contributions.",
+        "credits.social.github.title": "GitHub Profile",
+        "credits.social.github.detail": "@celiobjunior",
+        "credits.social.beacons.title": "All Social Links",
+        "credits.social.beacons.detail": "beacons.ai/devcelio",
 
         // Scanner
         "scanner.title": "EcoScanner",
@@ -255,6 +324,8 @@ enum LocalizationStore {
         "navigation.scanner": "Scanner",
         "navigation.history": "Histórico",
         "navigation.profile": "Perfil",
+        "navigation.help": "Ajuda",
+        "navigation.credits": "Créditos",
 
         // Common formats
         "common.xp_total": "%d XP",
@@ -359,33 +430,73 @@ enum LocalizationStore {
         "profile.progress_decimal": "%.1f / %.1f",
 
         // Onboarding
-        "onboarding.page1.title": "Reciclagem fortalece\ncomunidades",
-        "onboarding.page1.subtitle": "Suas escolhas diárias melhoram bairros, escolas e espaços públicos.",
-        "onboarding.page1.card1.title": "Impacto social em cada item",
-        "onboarding.page1.card1.body": "O descarte correto mantém ruas mais limpas e ajuda a prevenir riscos à saúde.",
-        "onboarding.page1.card2.title": "Cidades mais resilientes",
-        "onboarding.page1.card2.body": "Menos resíduos em aterros significa menos emissões e melhor qualidade ambiental para todos.",
-        "onboarding.page2.title": "Escaneie rápido,\naprenda com clareza",
-        "onboarding.page2.subtitle": "Use a câmera para identificar materiais e agir com confiança.",
-        "onboarding.page2.card1.title": "Reconhecimento instantâneo",
-        "onboarding.page2.card1.body": "O modelo classifica materiais recicláveis comuns em segundos.",
-        "onboarding.page2.card2.title": "Orientação prática",
-        "onboarding.page2.card2.body": "Receba instruções claras para separar e descartar cada item corretamente.",
-        "onboarding.page3.title": "Transforme hábitos em\nmudança coletiva",
-        "onboarding.page3.subtitle": "Construa rotinas que inspiram sua família, amigos e comunidade local.",
-        "onboarding.page3.card1.title": "Progresso visível",
-        "onboarding.page3.card1.body": "Acompanhe suas coletas, crescimento de XP e CO₂ evitado ao longo do tempo.",
-        "onboarding.page3.card2.title": "Engajamento comunitário",
-        "onboarding.page3.card2.body": "Use sequências e metas para manter todos motivados em ações diárias de reciclagem.",
-        "onboarding.page4.title": "Pronto para seu\npróximo scan?",
-        "onboarding.page4.subtitle": "O EcoScanner transforma consciência ambiental em impacto prático.",
-        "onboarding.page4.card1.title": "Da escola para o bairro",
-        "onboarding.page4.card1.body": "Aplique o app em projetos de aula, eventos e iniciativas comunitárias.",
-        "onboarding.page4.card2.title": "Feito para utilidade real",
-        "onboarding.page4.card2.body": "Projetado para decisões rápidas que melhoram a qualidade do descarte todos os dias.",
-        "onboarding.start_button": "Comece a Salvar o Planeta",
+        "onboarding.page1.title": "Coleta seletiva\nsem complicação",
+        "onboarding.page1.subtitle": "O objetivo do EcoScanner é incentivar o descarte seletivo correto todos os dias.",
+        "onboarding.page1.card1.title": "Por que este app existe",
+        "onboarding.page1.card1.body": "Ele ajuda a criar o hábito de separar resíduos corretamente em casa, escola e trabalho.",
+        "onboarding.page1.card2.title": "Cada item conta",
+        "onboarding.page1.card2.body": "A coleta seletiva constante evita que recicláveis acabem no lixo comum e em aterros.",
+        "onboarding.page2.title": "Descarte primeiro,\ndepois escaneie",
+        "onboarding.page2.subtitle": "Após descartar corretamente, escaneie o objeto para declarar e registrar essa ação.",
+        "onboarding.page2.card1.title": "Passo 1: descarte correto",
+        "onboarding.page2.card1.body": "Coloque o item na coleta seletiva adequada antes de escanear.",
+        "onboarding.page2.card2.title": "Passo 2: declarar com scan",
+        "onboarding.page2.card2.body": "A câmera identifica o material e registra no app seu descarte correto.",
+        "onboarding.page3.title": "O que o app\nconsegue escanear?",
+        "onboarding.page3.subtitle": "O EcoScanner reconhece atualmente as categorias abaixo.",
+        "onboarding.page3.card1.title": "Todas as categorias suportadas",
+        "onboarding.page3.card1.body": "Use a lista como referência rápida antes de escanear cada item.",
+        "onboarding.page3.card2.title": "Melhor resultado no scan",
+        "onboarding.page3.card2.body": "Se a detecção estiver incerta, melhore a luz e enquadre apenas um objeto.",
+        "onboarding.page4.title": "Transforme isso\nem rotina",
+        "onboarding.page4.subtitle": "Acompanhe suas coletas e mantenha o hábito da coleta seletiva ao longo da semana.",
+        "onboarding.page4.card1.title": "Histórico visível",
+        "onboarding.page4.card1.body": "Veja o que você declarou e acompanhe seu impacto positivo com o tempo.",
+        "onboarding.page4.card2.title": "Constância diária",
+        "onboarding.page4.card2.body": "Use sequências e metas para manter a reciclagem seletiva ativa.",
+        "onboarding.start_button": "Começar Agora",
         "onboarding.next": "Próximo",
         "onboarding.skip": "Pular",
+        "onboarding.categories.title": "Categorias escaneáveis",
+        "onboarding.categories.subtitle": "Estas são todas as categorias de materiais suportadas atualmente.",
+
+        // Primeiro scan guiado
+        "guided.scan.title": "Tutorial: primeiro scan obrigatório",
+        "guided.scan.body": "Descarte um item corretamente, enquadre o objeto na câmera e toque em escanear para registrar.",
+        "guided.completion.title": "Perfeito, seu primeiro scan foi concluído",
+        "guided.completion.body": "Ótimo trabalho. Você registrou um descarte correto. Continue escaneando seus recicláveis para manter uma rotina real de coleta seletiva.",
+        "guided.completion.button": "Continuar no EcoScanner",
+
+        // Ajuda
+        "help.title": "Ajuda e Tutorial",
+        "help.close": "Fechar",
+        "help.intro": "Precisa relembrar rápido? Aqui está o que o EcoScanner faz e como usar corretamente.",
+        "help.card.objective.title": "Objetivo do app",
+        "help.card.objective.body": "O EcoScanner incentiva a coleta seletiva ajudando você a identificar materiais e registrar descartes corretos.",
+        "help.card.howto.title": "Como funciona",
+        "help.card.howto.body": "1) Descarte no fluxo correto. 2) Escaneie o objeto descartado. 3) Confirme e acompanhe seu histórico.",
+        "help.card.categories.title": "Categorias escaneáveis",
+        "help.card.categories.body": "Plástico, vidro, metal, papel, papelão, eletrônico, biodegradável e têxtil.",
+        "help.open_credits": "Abrir Créditos e Dedicatórias",
+        "help.revisit_onboarding": "Ver Onboarding Novamente",
+        "help.revisit_hint": "Isso vai reiniciar o onboarding e o primeiro scan guiado.",
+
+        // Créditos
+        "credits.title": "Dedicatórias e Créditos",
+        "credits.intro": "O EcoScanner usa recursos abertos e contribuições da comunidade. Agradecimentos especiais às fontes abaixo.",
+        "credits.section.datasets": "Datasets open-source",
+        "credits.section.project": "Repositório do projeto",
+        "credits.section.social": "Redes sociais",
+        "credits.dataset.one.title": "Recycling Dataset (Humans in the Loop)",
+        "credits.dataset.one.detail": "Fonte e referências do dataset.",
+        "credits.dataset.two.title": "Waste Classification Dataset (Mendeley Data)",
+        "credits.dataset.two.detail": "Fonte e referências do dataset.",
+        "credits.project.repo.title": "EcoScanner no GitHub",
+        "credits.project.repo.detail": "Código-fonte, issues e contribuições.",
+        "credits.social.github.title": "Perfil no GitHub",
+        "credits.social.github.detail": "@celiobjunior",
+        "credits.social.beacons.title": "Todas as redes",
+        "credits.social.beacons.detail": "beacons.ai/devcelio",
 
         // Scanner
         "scanner.title": "EcoScanner",

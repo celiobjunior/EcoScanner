@@ -46,35 +46,40 @@ struct OnboardingView: View {
 private extension OnboardingView {
 
     func pageView(_ page: OnboardingPage, isFirst: Bool) -> some View {
-        VStack(spacing: .spacing.x5) {
-            Spacer(minLength: .spacing.x8)
+        ScrollView(showsIndicators: false) {
+            VStack(spacing: .spacing.x5) {
+                heroView(isFirst: isFirst, systemImage: page.systemImage)
 
-            heroView(isFirst: isFirst, systemImage: page.systemImage)
+                VStack(spacing: .spacing.x2) {
+                    Text(page.titleKey.localized)
+                        .font(.system(size: .fontSize.huge, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.ecoSmoke)
 
-            VStack(spacing: .spacing.x2) {
-                Text(page.titleKey.localized)
-                    .font(.system(size: .fontSize.huge, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.ecoSmoke)
+                    Text(page.subtitleKey.localized)
+                        .font(.system(size: .fontSize.medium))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.ecoSmoke.opacity(0.9))
+                        .lineSpacing(4)
+                }
+                .frame(maxWidth: 620)
 
-                Text(page.subtitleKey.localized)
-                    .font(.system(size: .fontSize.medium))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.ecoSmoke.opacity(0.9))
-                    .lineSpacing(4)
-            }
-            .frame(maxWidth: 620)
+                VStack(spacing: .spacing.x3) {
+                    ForEach(page.cards) { card in
+                        onboardingCard(card)
+                    }
+                }
+                .frame(maxWidth: 680)
 
-            VStack(spacing: .spacing.x3) {
-                ForEach(page.cards) { card in
-                    onboardingCard(card)
+                if page.showsCategories {
+                    categoriesSection
+                        .frame(maxWidth: 680)
                 }
             }
-            .frame(maxWidth: 680)
-
-            Spacer(minLength: .spacing.x8)
+            .padding(.horizontal, .spacing.x6)
+            .padding(.vertical, .spacing.x8)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.horizontal, .spacing.x6)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -127,6 +132,63 @@ private extension OnboardingView {
                     RoundedRectangle(cornerRadius: 16)
                         .stroke(Color.surfaceStroke, lineWidth: 1)
                 )
+        )
+    }
+
+    var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: .spacing.x3) {
+            VStack(alignment: .leading, spacing: .spacing.base) {
+                Text("onboarding.categories.title".localized)
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoSmoke)
+
+                Text("onboarding.categories.subtitle".localized)
+                    .font(.system(size: .fontSize.small))
+                    .foregroundColor(.ecoSmoke.opacity(0.85))
+                    .lineSpacing(3)
+            }
+
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: .spacing.x2),
+                    GridItem(.flexible(), spacing: .spacing.x2),
+                ],
+                spacing: .spacing.x2
+            ) {
+                ForEach(WasteCategory.allCases) { category in
+                    categoryBadge(category)
+                }
+            }
+        }
+        .padding(.spacing.x4)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(.ultraThinMaterial)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.surfaceStroke, lineWidth: 1)
+                )
+        )
+    }
+
+    func categoryBadge(_ category: WasteCategory) -> some View {
+        HStack(spacing: .spacing.x2) {
+            Image(systemName: category.systemImage)
+                .font(.system(size: .fontSize.small, weight: .semibold))
+                .foregroundColor(category.color)
+
+            Text(category.displayName)
+                .font(.system(size: .fontSize.small, weight: .semibold))
+                .foregroundColor(.ecoSmoke)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, .spacing.x2)
+        .padding(.horizontal, .spacing.x3)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color.white.opacity(0.08))
         )
     }
 
@@ -193,6 +255,7 @@ private struct OnboardingPage {
     let titleKey: String
     let subtitleKey: String
     let cards: [OnboardingCard]
+    let showsCategories: Bool
 
     static let pages: [OnboardingPage] = [
         OnboardingPage(
@@ -212,7 +275,8 @@ private struct OnboardingPage {
                     titleKey: "onboarding.page1.card2.title",
                     bodyKey: "onboarding.page1.card2.body"
                 ),
-            ]
+            ],
+            showsCategories: false
         ),
         OnboardingPage(
             systemImage: "camera.viewfinder",
@@ -231,7 +295,8 @@ private struct OnboardingPage {
                     titleKey: "onboarding.page2.card2.title",
                     bodyKey: "onboarding.page2.card2.body"
                 ),
-            ]
+            ],
+            showsCategories: false
         ),
         OnboardingPage(
             systemImage: "arrow.3.trianglepath",
@@ -250,7 +315,8 @@ private struct OnboardingPage {
                     titleKey: "onboarding.page3.card2.title",
                     bodyKey: "onboarding.page3.card2.body"
                 ),
-            ]
+            ],
+            showsCategories: true
         ),
         OnboardingPage(
             systemImage: "chart.line.uptrend.xyaxis",
@@ -269,7 +335,8 @@ private struct OnboardingPage {
                     titleKey: "onboarding.page4.card2.title",
                     bodyKey: "onboarding.page4.card2.body"
                 ),
-            ]
+            ],
+            showsCategories: false
         ),
     ]
 }

@@ -8,6 +8,8 @@ struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject var profileManager: UserProfileManager
     @State private var selectedTab: SidebarTab? = .scanner
+    @State private var showHelp = false
+    @State private var showCredits = false
 
     var body: some View {
         NavigationSplitView {
@@ -18,6 +20,12 @@ struct MainTabView: View {
         .tint(.ecoPrimary)
         .onAppear {
             _updateContext()
+        }
+        .sheet(isPresented: $showHelp) {
+            HelpTutorialView()
+        }
+        .sheet(isPresented: $showCredits) {
+            CreditsView()
         }
     }
 }
@@ -55,6 +63,20 @@ private extension MainTabView {
             ForEach(SidebarTab.allCases) { tab in
                 Label(tab.labelKey.localized, systemImage: tab.systemImage)
                     .tag(tab)
+            }
+
+            Section {
+                Button {
+                    showHelp = true
+                } label: {
+                    Label("navigation.help".localized, systemImage: "questionmark.circle")
+                }
+
+                Button {
+                    showCredits = true
+                } label: {
+                    Label("navigation.credits".localized, systemImage: "heart.text.square")
+                }
             }
         }
         .navigationTitle("app.name".localized)

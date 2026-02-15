@@ -4,6 +4,9 @@ import SwiftUI
 
 struct ScannerView: View {
 
+    let isGuidedMode: Bool
+    let onGuidedScanCompleted: (() -> Void)?
+
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
     @EnvironmentObject private var profileManager: UserProfileManager
@@ -14,6 +17,17 @@ struct ScannerView: View {
     @State private var lastFact: MaterialFact?
     @State private var scanPulse = false
     @State private var notifications: [ScannerBanner] = []
+    @State private var shouldCompleteGuidedFlowAfterFeedback = false
+    @State private var hasCompletedGuidedFlow = false
+    @State private var isScannerVisible = false
+
+    init(
+        isGuidedMode: Bool = false,
+        onGuidedScanCompleted: (() -> Void)? = nil
+    ) {
+        self.isGuidedMode = isGuidedMode
+        self.onGuidedScanCompleted = onGuidedScanCompleted
+    }
 
     var body: some View {
         ZStack {
@@ -22,6 +36,13 @@ struct ScannerView: View {
 
             VStack {
                 topBar
+
+                if isGuidedMode {
+                    guidedModeCard
+                        .padding(.horizontal, .spacing.x6)
+                        .padding(.top, .spacing.x2)
+                }
+
                 Spacer()
                 scannerGuide
                 Spacer()
@@ -45,7 +66,7 @@ struct ScannerView: View {
                     entry: entry,
                     profile: profileManager.profile,
                     fact: fact,
-                    onDismiss: { showFeedback = false }
+                    onDismiss: handleFeedbackDismiss
                 )
                 .transition(.opacity)
             }
@@ -57,11 +78,21 @@ struct ScannerView: View {
             await wasteDetector.setup()
             await cameraManager.startCapture()
         }
+        .onAppear {
+            isScannerVisible = true
+        }
         .onDisappear {
+            isScannerVisible = false
             Task { await cameraManager.stopCapture() }
         }
         .onChange(of: wasteDetector.currentDetection != nil) { _, hasDetection in
             scanPulse = hasDetection
+        }
+        .onChange(of: cameraManager.runStatus) { _, status in
+            guard isScannerVisible else { return }
+            guard status == .stopped else { return }
+            guard cameraManager.setupStatus == .success else { return }
+            Task { await cameraManager.startCapture() }
         }
     }
 }
@@ -69,6 +100,35 @@ struct ScannerView: View {
 // MARK: - Subviews
 
 private extension ScannerView {
+
+    var guidedModeCard: some View {
+        VStack(alignment: .leading, spacing: .spacing.base) {
+            HStack(spacing: .spacing.base) {
+                Image(systemName: "questionmark.circle.fill")
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoLight)
+
+                Text("guided.scan.title".localized)
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoSmoke)
+            }
+
+            Text("guided.scan.body".localized)
+                .font(.system(size: .fontSize.xsmall))
+                .foregroundColor(.ecoSmoke.opacity(0.9))
+                .lineSpacing(3)
+        }
+        .frame(maxWidth: 520, alignment: .leading)
+        .padding(.spacing.x4)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color.black.opacity(0.72))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(Color.surfaceStroke, lineWidth: 1)
+                )
+        )
+    }
 
     var bannerStack: some View {
         VStack(spacing: .spacing.x2) {
@@ -276,7 +336,22 @@ private extension ScannerView {
             showFeedback = true
         }
 
+        if isGuidedMode && !hasCompletedGuidedFlow {
+            shouldCompleteGuidedFlowAfterFeedback = true
+        }
+
         presentNotifications()
+    }
+
+    func handleFeedbackDismiss() {
+        showFeedback = false
+
+        guard shouldCompleteGuidedFlowAfterFeedback else { return }
+        shouldCompleteGuidedFlowAfterFeedback = false
+
+        guard !hasCompletedGuidedFlow else { return }
+        hasCompletedGuidedFlow = true
+        onGuidedScanCompleted?()
     }
 
     func presentNotifications() {
