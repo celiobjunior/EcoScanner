@@ -13,6 +13,7 @@ It uses camera + CoreML classification to identify recyclable materials in real 
 - Bundle ID: `com.devcelio.EcoScanner`
 - App category: Education
 - Main capability: Camera permission configured in `Package.swift`
+- Accent color config: system default (`accentColor: nil` in `Package.swift`)
 
 ## Current Architecture
 
@@ -25,7 +26,10 @@ EcoScannerApp (@main, MyApp.swift)
      - UserProfileManager
 
 Main UI
-  -> OnboardingView (4 pages) if hasCompletedOnboarding == false
+  -> OnboardingView (5 pages, including visual tutorial image) if hasCompletedOnboarding == false
+  -> GuidedFirstScanView if hasCompletedOnboarding == true and hasCompletedFirstGuidedScan == false
+     - ScannerView(isGuidedMode: true)
+     - GuidedCompletionView
   -> MainTabView (NavigationSplitView) otherwise
      - ScannerView
        - ScannerAVCaptureView (camera preview + frame updates)
@@ -34,6 +38,9 @@ Main UI
      - EcoHistoryView
      - ProfileView
        - ProfileAchievementsSection (separated file)
+     - Support sheets from drawer:
+       - HelpTutorialView
+       - CreditsView
 
 Layers
   Core/
@@ -48,6 +55,7 @@ Layers
   Resources/
     - Data/MaterialFacts.json
     - MLModel/EcoScanner.mlmodelc
+    - Assets.xcassets (includes `TutorialImageEN`, `TutorialImagePT`)
 ```
 
 ## Data and Feature Flows
@@ -57,10 +65,14 @@ Layers
 ```text
 AVCaptureSession frames
   -> ScannerAVCaptureView.Coordinator.captureOutput(...)
-  -> WasteDetector.onImageReceived(buffer:)
+  -> WasteDetector.onImageReceived(buffer:) (~5 FPS)
   -> VNCoreMLRequest
-  -> top classification (confidence >= 0.3)
+  -> top classification (confidence >= 0.50)
   -> label mapping to WasteCategory
+  -> confidence smoothing:
+     - new display requires confidence >= 0.58 and 2 consistent hits
+     - displayed result is kept while confidence >= 0.50
+     - clear after 3 missed frames
   -> @Published currentDetection
   -> ScannerView detection card + enabled scan button
 ```
@@ -80,10 +92,24 @@ User taps scan button
   -> Level-up / achievement banners queued on scanner screen
 ```
 
-### 3) History and Profile
+### 3) Onboarding and Guided First Scan
+
+```text
+Launch
+  -> OnboardingView (5 pages)
+     - page 5 shows localized tutorial image (`TutorialImageEN` / `TutorialImagePT`)
+  -> GuidedFirstScanView
+     - user must complete one real scan in guided mode
+     - FeedbackView dismiss triggers GuidedCompletionView
+  -> MainTabView
+```
+
+### 4) History and Profile
 
 - `EcoHistoryView`: filter chips by category, summary header, list of all entries.
 - `ProfileView`: level progress, CO2 card, stats grid, adaptive achievements grid, level detail sheet, achievement detail sheet with progress bars.
+- `HelpTutorialView`: practical recap + button to restart onboarding and guided first scan.
+- `CreditsView`: datasets, repository, and social links.
 
 ## Gamification (Current Rules)
 
@@ -154,7 +180,7 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 ## ML Model Details (Current)
 
 - Resource: `Resources/MLModel/EcoScanner.mlmodelc`
-- Size on disk: ~196 KB
+- Size on disk: ~92 KB
 - Input: color image `299x299`, BGR
 - Output: `target` (label string) + `targetProbability` dictionary
 - Inference gate: `confidence >= 0.50` for candidate processing
@@ -186,18 +212,19 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 `Core/Localization/Localization.swift` uses dictionary-based localization (no `.lproj` in this setup):
 
 - Languages: English (`en`) and Portuguese Brazil (`ptBR`)
-- Approx. key count: 374 total dictionary entries (both languages combined)
+- Approx. key count: 450 total dictionary entries (both languages combined)
+- Language decision: based on `Locale.preferredLanguages` + locale identifiers (more reliable on iPad/iPhone language settings)
 - API:
   - `"some.key".localized`
   - `"some.key".localized(with: args...)`
 
 ## Resources Snapshot
 
-- `Resources/MLModel/EcoScanner.mlmodelc`: ~196 KB
+- `Resources/MLModel/EcoScanner.mlmodelc`: ~92 KB
 - `Resources/Data/MaterialFacts.json`: 24 facts, ~4 KB
-- `Assets.xcassets`: ~312 KB
-- Project folder total: ~1.3 MB
-- Example full zip of folder (including git metadata): ~1.0 MB
+- `Assets.xcassets`: ~5.8 MB
+- Project folder total: ~12 MB
+- Example full zip of folder (including git metadata): ~12 MB
 
 ## Build and Run
 
@@ -216,7 +243,7 @@ ls -lh EcoScanner.zip
 - Under 25 MB zipped: yes (well below limit in local check)
 - Offline-friendly: yes (no network layer in code)
 - Camera-first core loop: yes (scan -> collect -> feedback)
-- Fast 3-minute core experience: yes (onboarding can be skipped, scanner flow is immediate)
+- Fast 3-minute core experience: yes (onboarding and first guided scan are short and lead directly to the main loop)
 
 ## Migration Notes from Old CLAUDE.md
 
@@ -226,15 +253,22 @@ Major changes that required this document update:
 - Project structure is now fully layered (`Core/Domain/Services/Features/Resources`).
 - App icon/resources changed (logo asset set now PNG-based in assets).
 - Onboarding content and visuals were redesigned.
+- Onboarding now has 5 pages and includes a dedicated visual tutorial page.
+- After onboarding, first guided scan is mandatory once (`hasCompletedFirstGuidedScan` gate).
 - Scanner UI now has:
   - custom guide frame
   - animated scan button
   - in-screen achievement/level-up banners
   - feedback overlay flow
+- Drawer now includes Help and Credits entries.
+- Help screen can restart onboarding + guided first scan.
+- Help and Credits use `Color.ecoInk` background (aligned with History/Profile).
 - Levels increased from 6 to 8, with new XP thresholds.
 - Achievements expanded from 8 to 19.
 - Material facts file currently has 24 entries.
 - Localization content was expanded significantly.
+- Localization language resolution now prioritizes preferred system languages.
+- App accent color is now system default (`accentColor: nil`), and `AccentColor.colorset` is removed.
 - `SupportingInfo.plist` is no longer a central config point for camera purpose; capability is declared in `Package.swift`.
 
 ## Maintenance Rule
