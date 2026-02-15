@@ -115,23 +115,54 @@ private extension WasteDetector {
     }
 
     nonisolated static func mapLabel(_ label: String) -> WasteCategory? {
-        let lowered = label.lowercased()
+        let normalized = label
+            .lowercased()
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        if let direct = WasteCategory(rawValue: lowered) { return direct }
+        // Explicit coverage for all class labels currently present in ecoscannermodel.
+        switch normalized {
+        case "plastic":
+            return .plastic
+        case "glass", "green-glass", "brown-glass", "white-glass":
+            return .glass
+        case "metal":
+            return .metal
+        case "paper":
+            return .paper
+        case "cardboard":
+            return .cardboard
+        case "battery":
+            return .electronic
+        case "biological":
+            return .biodegradable
+        case "clothes", "shoes":
+            return .textile
+        case "trash":
+            // Intentionally ignored: model says non-recyclable "trash".
+            return nil
+        default:
+            break
+        }
+
+        if let direct = WasteCategory(rawValue: normalized) { return direct }
 
         let plasticKeywords = ["bottle", "water bottle", "plastic", "pop bottle", "soda bottle"]
         let glassKeywords = ["wine bottle", "beer bottle", "glass", "goblet", "vase"]
         let metalKeywords = ["can", "tin can", "aluminum", "metal", "steel"]
         let paperKeywords = ["paper", "envelope", "book", "newspaper"]
         let cardboardKeywords = ["carton", "cardboard", "box", "package"]
-        let electronicKeywords = ["laptop", "cellphone", "mouse", "keyboard", "monitor"]
+        let electronicKeywords = ["laptop", "cellphone", "phone", "mouse", "keyboard", "monitor", "battery"]
+        let biodegradableKeywords = ["biological", "organic", "food", "compost"]
+        let textileKeywords = ["clothes", "shoe", "shoes", "tshirt", "fabric", "textile"]
 
-        if plasticKeywords.contains(where: { lowered.contains($0) }) { return .plastic }
-        if glassKeywords.contains(where: { lowered.contains($0) }) { return .glass }
-        if metalKeywords.contains(where: { lowered.contains($0) }) { return .metal }
-        if paperKeywords.contains(where: { lowered.contains($0) }) { return .paper }
-        if cardboardKeywords.contains(where: { lowered.contains($0) }) { return .cardboard }
-        if electronicKeywords.contains(where: { lowered.contains($0) }) { return .electronic }
+        if plasticKeywords.contains(where: { normalized.contains($0) }) { return .plastic }
+        if glassKeywords.contains(where: { normalized.contains($0) }) { return .glass }
+        if metalKeywords.contains(where: { normalized.contains($0) }) { return .metal }
+        if paperKeywords.contains(where: { normalized.contains($0) }) { return .paper }
+        if cardboardKeywords.contains(where: { normalized.contains($0) }) { return .cardboard }
+        if electronicKeywords.contains(where: { normalized.contains($0) }) { return .electronic }
+        if biodegradableKeywords.contains(where: { normalized.contains($0) }) { return .biodegradable }
+        if textileKeywords.contains(where: { normalized.contains($0) }) { return .textile }
 
         return nil
     }

@@ -165,12 +165,17 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 
 `WasteDetector.mapLabel` uses:
 
-- direct `WasteCategory(rawValue: lowered)` first
-- keyword fallback for:
-  - plastic, glass, metal, paper, cardboard, electronic
-
-Current mapping does **not** explicitly map labels like `biological`, `clothes`, `shoes`, `battery`, `trash`.
-Those cases can return `nil` unless covered by existing substring fallback.
+- explicit mapping for all current model labels:
+  - `plastic` -> `.plastic`
+  - `glass`, `green-glass`, `brown-glass`, `white-glass` -> `.glass`
+  - `metal` -> `.metal`
+  - `paper` -> `.paper`
+  - `cardboard` -> `.cardboard`
+  - `battery` -> `.electronic`
+  - `biological` -> `.biodegradable`
+  - `clothes`, `shoes` -> `.textile`
+  - `trash` -> ignored (`nil`, non-recyclable)
+- plus a keyword fallback for legacy/free-form labels.
 
 ## Localization
 
