@@ -10,7 +10,7 @@ import AppleProductTypes
 let package = Package(
     name: "EcoScanner",
     platforms: [
-        .iOS("16.0")
+        .iOS("26.0")
     ],
     products: [
         .iOSApplication(
@@ -21,7 +21,7 @@ let package = Package(
             displayVersion: "1.0",
             bundleVersion: "1",
             appIcon: .asset("AppIcon"),
-            accentColor: .asset("AccentColor"),
+            accentColor: .presetColor(.green),
             supportedDeviceFamilies: [
                 .pad,
                 .phone
@@ -41,7 +41,11 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AppModule",
-            path: "."
+            path: ".",
+            resources: [
+                .process("Resources/Data/MaterialFacts.json"),
+                .copy("Resources/MLModel/EcoScanner.mlmodelc")
+            ]
         )
     ],
     swiftLanguageVersions: [.version("6")]
