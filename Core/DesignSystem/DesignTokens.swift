@@ -97,6 +97,9 @@ extension CGFloat {
         static let carbonCardIcon: CGFloat = 56
         static let onboardingHeroLogo: CGFloat = 220
         static let onboardingSecondaryHero: CGFloat = 110
+        static let scannerLogo: CGFloat = 28
+        static let supportLogo: CGFloat = 44
+        static let creditsLogo: CGFloat = 80
         static let scannerGuideFrame: CGFloat = 248
         static let scannerGuideCornerLength: CGFloat = 70
         static let scannerButtonOuter: CGFloat = 84

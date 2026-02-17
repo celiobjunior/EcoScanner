@@ -19,6 +19,12 @@ struct CreditsView: View {
             detailKey: "credits.dataset.two.detail",
             url: "https://data.mendeley.com/datasets/z732f9pwxt/1"
         ),
+        CreditLink(
+            icon: "archivebox.fill",
+            titleKey: "credits.dataset.three.title",
+            detailKey: "credits.dataset.three.detail",
+            url: "https://zenodo.org/records/3587843"
+        ),
     ]
 
     private let projectLinks: [CreditLink] = [
@@ -51,11 +57,22 @@ struct CreditsView: View {
                 Color.ecoInk.ignoresSafeArea()
 
                 ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: .spacing.x4) {
+                    VStack(alignment: .center, spacing: .spacing.x4) {
+                        Text("credits.thanks".localized)
+                            .font(.system(size: .fontSize.title, weight: .bold))
+                            .foregroundColor(.ecoSmoke)
+                            .frame(maxWidth: .infinity)
+
+                        Image("EcoScannerLogoNoBg")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: .size.creditsLogo)
+
                         Text("credits.intro".localized)
-                            .font(.system(size: .fontSize.medium))
-                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textPrimary))
-                            .lineSpacing(.lineSpacing.compact)
+                            .font(.system(size: .fontSize.small))
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textSecondary))
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
 
                         linksSection(titleKey: "credits.section.datasets", links: datasetLinks)
                         linksSection(titleKey: "credits.section.project", links: projectLinks)

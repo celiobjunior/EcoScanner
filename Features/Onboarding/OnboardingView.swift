@@ -13,7 +13,7 @@ struct OnboardingView: View {
     var body: some View {
         ZStack {
             AngularGradient(
-                colors: [.ecoDark, .ecoPrimary, .ecoLight, .ecoPrimary, .ecoDark],
+                colors: [.ecoInk, .ecoDark, .ecoPrimary, .ecoLight, .ecoPrimary, .ecoDark, .ecoInk],
                 center: .center,
                 angle: .degrees(gradientAngle)
             )

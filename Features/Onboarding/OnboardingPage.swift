@@ -46,7 +46,7 @@ struct OnboardingPage {
                 tutorialImageAssetName: nil
             ),
             OnboardingPage(
-                systemImage: "camera.viewfinder",
+                systemImage: "viewfinder",
                 titleKey: "onboarding.page2.title",
                 subtitleKey: "onboarding.page2.subtitle",
                 cards: [

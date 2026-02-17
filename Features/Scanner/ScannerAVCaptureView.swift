@@ -1,6 +1,7 @@
 import SwiftUI
 import AVFoundation
 import UIKit
+import Combine
 
 // MARK: - ScannerAVCaptureView
 
@@ -8,7 +9,7 @@ struct ScannerAVCaptureView: UIViewRepresentable {
 
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
-    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
+    var debugBoundingBoxEnabled: Bool
 
     func makeUIView(context: Context) -> UIView {
         context.coordinator.makeUIView(with: cameraManager.captureSession)
@@ -16,11 +17,7 @@ struct ScannerAVCaptureView: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.updateFrame(with: uiView.frame.size)
-        context.coordinator.updateDebugOverlay(
-            with: wasteDetector.debugFrame,
-            fallbackDetection: wasteDetector.currentDetection,
-            enabled: debugBoundingBoxEnabled
-        )
+        context.coordinator.setDebugEnabled(debugBoundingBoxEnabled)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -53,6 +50,11 @@ extension ScannerAVCaptureView {
         private var capturePreview: AVCaptureVideoPreviewLayer? = nil
         private var selectedDebugBoxLayer: CAShapeLayer? = nil
         private var lastOrientation: AVCaptureVideoOrientation? = nil
+        private var latestDebugFrame: DetectionDebugFrame? = nil
+        private var latestFallbackDetection: WasteDetectionResult? = nil
+        private var isDebugEnabled = false
+        private var subscriptions = Set<AnyCancellable>()
+        private var hasBoundDetector = false
 
         init(wasteDetector: WasteDetector, cameraManager: CameraManager) {
             self.wasteDetector = wasteDetector
@@ -88,7 +90,9 @@ extension ScannerAVCaptureView {
             self.uiView = uiView
             self.capturePreview = capturePreview
             self.selectedDebugBoxLayer = selectedLayer
+            bindDetectorIfNeeded()
             applyOrientation()
+            refreshDebugOverlay()
             return uiView
         }
 
@@ -96,6 +100,13 @@ extension ScannerAVCaptureView {
             capturePreview?.frame = CGRect(origin: .zero, size: size)
             selectedDebugBoxLayer?.frame = CGRect(origin: .zero, size: size)
             applyOrientation()
+            refreshDebugOverlay()
+        }
+
+        func setDebugEnabled(_ enabled: Bool) {
+            guard isDebugEnabled != enabled else { return }
+            isDebugEnabled = enabled
+            refreshDebugOverlay()
         }
 
         func applyOrientation() {
@@ -136,6 +147,33 @@ extension ScannerAVCaptureView {
             default:
                 return .portrait
             }
+        }
+
+        func bindDetectorIfNeeded() {
+            guard !hasBoundDetector else { return }
+            hasBoundDetector = true
+
+            wasteDetector.$debugFrame
+                .sink { [weak self] frame in
+                    self?.latestDebugFrame = frame
+                    self?.refreshDebugOverlay()
+                }
+                .store(in: &subscriptions)
+
+            wasteDetector.$currentDetection
+                .sink { [weak self] detection in
+                    self?.latestFallbackDetection = detection
+                    self?.refreshDebugOverlay()
+                }
+                .store(in: &subscriptions)
+        }
+
+        func refreshDebugOverlay() {
+            updateDebugOverlay(
+                with: latestDebugFrame,
+                fallbackDetection: latestFallbackDetection,
+                enabled: isDebugEnabled
+            )
         }
 
         func updateDebugOverlay(
