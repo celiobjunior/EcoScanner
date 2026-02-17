@@ -47,14 +47,10 @@ private extension ProfileView {
     var profileHeader: some View {
         VStack(spacing: .spacing.x5) {
             VStack(spacing: .spacing.x3) {
-                Image(systemName: profileManager.profile.currentLevel.systemImage)
-                    .font(.system(size: .iconSize.display, weight: .light))
-                    .foregroundStyle(
-                        LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                Text(profileManager.profile.name)
-                    .font(.system(size: .fontSize.large, weight: .bold))
-                    .foregroundColor(.ecoSmoke)
+                Image("EcoScannerLogoNoBg")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: .size.profileHeaderLogo, height: .size.profileHeaderLogo)
             }
 
             VStack(spacing: .spacing.x2) {
@@ -67,7 +63,7 @@ private extension ProfileView {
                     showLevelsSheet = true
                 }
                 .font(.system(size: .fontSize.xsmall, weight: .semibold))
-                .foregroundColor(.ecoLight)
+                .foregroundColor(.xpGold)
             }
 
             VStack(spacing: .spacing.base) {

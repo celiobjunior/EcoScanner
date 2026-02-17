@@ -172,6 +172,9 @@ private extension ScannerView {
         HStack {
             statusInfoContainer
             Spacer()
+            if profileManager.profile.currentStreak > 0 {
+                streakCapsule
+            }
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.top, .spacing.x4)
@@ -179,12 +182,7 @@ private extension ScannerView {
 
     var statusInfoContainer: some View {
         GlassEffectContainer(spacing: .spacing.x2) {
-            HStack(spacing: .spacing.x2) {
-                levelCapsule
-                if profileManager.profile.currentStreak > 0 {
-                    streakCapsule
-                }
-            }
+            levelCapsule
         }
     }
 

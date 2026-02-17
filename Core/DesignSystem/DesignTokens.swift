@@ -95,6 +95,7 @@ extension CGFloat {
         static let levelIconSlot: CGFloat = 34
         static let historyCategoryIcon: CGFloat = 44
         static let carbonCardIcon: CGFloat = 56
+        static let profileHeaderLogo: CGFloat = 80
         static let onboardingHeroLogo: CGFloat = 220
         static let onboardingSecondaryHero: CGFloat = 110
         static let scannerLogo: CGFloat = 28
