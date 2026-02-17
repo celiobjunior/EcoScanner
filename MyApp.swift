@@ -5,6 +5,7 @@ import SwiftData
 struct EcoScannerApp: App {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    @AppStorage("hasCompletedFirstGuidedScan") private var hasCompletedFirstGuidedScan = false
 
     let modelContainer: ModelContainer
     @StateObject private var profileManager: UserProfileManager
@@ -12,11 +13,6 @@ struct EcoScannerApp: App {
     @StateObject private var cameraManager = CameraManager()
 
     init() {
-        #if DEBUG
-        // Keep onboarding visible on each run during development/testing.
-        UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
-        #endif
-
         do {
             let container = try ModelContainer(
                 for: UserProfile.self, CollectionEntry.self
@@ -32,10 +28,17 @@ struct EcoScannerApp: App {
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding {
-                MainTabView()
-                    .environmentObject(wasteDetector)
-                    .environmentObject(profileManager)
-                    .environmentObject(cameraManager)
+                if hasCompletedFirstGuidedScan {
+                    MainTabView()
+                        .environmentObject(wasteDetector)
+                        .environmentObject(profileManager)
+                        .environmentObject(cameraManager)
+                } else {
+                    GuidedFirstScanView()
+                        .environmentObject(wasteDetector)
+                        .environmentObject(profileManager)
+                        .environmentObject(cameraManager)
+                }
             } else {
                 OnboardingView()
             }

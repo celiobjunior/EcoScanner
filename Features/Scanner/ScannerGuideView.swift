@@ -5,13 +5,13 @@ import SwiftUI
 struct ScannerGuideView: View {
     let isActive: Bool
 
-    private let cornerLength: CGFloat = 70
-    private let lineWidth: CGFloat = 10
+    private let cornerLength: CGFloat = .size.scannerGuideCornerLength
+    private let lineWidth: CGFloat = .lineWidth.scannerGuide
 
     var body: some View {
         ScannerCornerFrameShape(cornerLength: cornerLength)
             .stroke(
-                isActive ? Color.ecoLight : Color.ecoSmoke.opacity(0.95),
+                isActive ? Color.ecoLight : Color.ecoSmoke.opacity(Double.opacity.almostOpaque),
                 style: StrokeStyle(
                     lineWidth: lineWidth,
                     lineCap: .round,
@@ -21,18 +21,22 @@ struct ScannerGuideView: View {
             .overlay {
                 ScannerCornerFrameShape(cornerLength: cornerLength)
                     .stroke(
-                        isActive ? Color.ecoPrimary.opacity(0.42) : .clear,
+                        isActive ? Color.ecoPrimary.opacity(Double.opacity.scannerFocus) : .clear,
                         style: StrokeStyle(
-                            lineWidth: 2,
+                            lineWidth: .lineWidth.regular,
                             lineCap: .round,
                             lineJoin: .round
                         )
                     )
-                    .blur(radius: isActive ? 1.2 : 0)
+                    .blur(radius: isActive ? .blur.subtle : .spacing.none)
             }
             .compositingGroup()
-            .shadow(color: .black.opacity(isActive ? 0.24 : 0.14), radius: 6, y: 2)
-            .animation(.easeInOut(duration: 0.2), value: isActive)
+            .shadow(
+                color: .black.opacity(isActive ? Double.opacity.overlaySoft : Double.opacity.track),
+                radius: .shadow.mediumRadius,
+                y: .shadow.smallYOffset
+            )
+            .animation(.easeInOut(duration: Double.duration.fast), value: isActive)
     }
 }
 

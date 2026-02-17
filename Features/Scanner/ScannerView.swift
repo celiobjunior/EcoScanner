@@ -4,9 +4,13 @@ import SwiftUI
 
 struct ScannerView: View {
 
+    let isGuidedMode: Bool
+    let onGuidedScanCompleted: (() -> Void)?
+
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
     @EnvironmentObject private var profileManager: UserProfileManager
+    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
 
     @State private var showFeedback = false
     @State private var lastEntry: CollectionEntry?
@@ -14,6 +18,17 @@ struct ScannerView: View {
     @State private var lastFact: MaterialFact?
     @State private var scanPulse = false
     @State private var notifications: [ScannerBanner] = []
+    @State private var shouldCompleteGuidedFlowAfterFeedback = false
+    @State private var hasCompletedGuidedFlow = false
+    @State private var isScannerVisible = false
+
+    init(
+        isGuidedMode: Bool = false,
+        onGuidedScanCompleted: (() -> Void)? = nil
+    ) {
+        self.isGuidedMode = isGuidedMode
+        self.onGuidedScanCompleted = onGuidedScanCompleted
+    }
 
     var body: some View {
         ZStack {
@@ -22,6 +37,13 @@ struct ScannerView: View {
 
             VStack {
                 topBar
+
+                if isGuidedMode {
+                    guidedModeCard
+                        .padding(.horizontal, .spacing.x6)
+                        .padding(.top, .spacing.x2)
+                }
+
                 Spacer()
                 scannerGuide
                 Spacer()
@@ -45,7 +67,7 @@ struct ScannerView: View {
                     entry: entry,
                     profile: profileManager.profile,
                     fact: fact,
-                    onDismiss: { showFeedback = false }
+                    onDismiss: handleFeedbackDismiss
                 )
                 .transition(.opacity)
             }
@@ -57,11 +79,21 @@ struct ScannerView: View {
             await wasteDetector.setup()
             await cameraManager.startCapture()
         }
+        .onAppear {
+            isScannerVisible = true
+        }
         .onDisappear {
+            isScannerVisible = false
             Task { await cameraManager.stopCapture() }
         }
         .onChange(of: wasteDetector.currentDetection != nil) { _, hasDetection in
             scanPulse = hasDetection
+        }
+        .onChange(of: cameraManager.runStatus) { _, status in
+            guard isScannerVisible else { return }
+            guard status == .stopped else { return }
+            guard cameraManager.setupStatus == .success else { return }
+            Task { await cameraManager.startCapture() }
         }
     }
 }
@@ -70,32 +102,61 @@ struct ScannerView: View {
 
 private extension ScannerView {
 
+    var guidedModeCard: some View {
+        VStack(alignment: .leading, spacing: .spacing.base) {
+            HStack(spacing: .spacing.base) {
+                Image(systemName: "questionmark.circle.fill")
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoLight)
+
+                Text("guided.scan.title".localized)
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoSmoke)
+            }
+
+            Text("guided.scan.body".localized)
+                .font(.system(size: .fontSize.xsmall))
+                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textEmphasis))
+                .lineSpacing(.lineSpacing.compact)
+        }
+        .frame(maxWidth: .maxWidth.guidedCard, alignment: .leading)
+        .padding(.spacing.x4)
+        .background(
+            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                .fill(Color.black.opacity(Double.opacity.cardOverlay))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                )
+        )
+    }
+
     var bannerStack: some View {
         VStack(spacing: .spacing.x2) {
             ForEach(notifications) { banner in
                 HStack(spacing: .spacing.x2) {
                     Image(systemName: banner.icon)
                         .foregroundColor(banner.color)
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: .spacing.hairline) {
                         Text(banner.title)
                             .font(.system(size: .fontSize.xsmall, weight: .bold))
                             .foregroundColor(.ecoSmoke)
                         Text(banner.message)
-                            .font(.system(size: 11))
-                            .foregroundColor(.ecoSmoke.opacity(0.82))
+                            .font(.system(size: .fontSize.caption))
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textStrong))
                             .lineLimit(1)
                     }
                     Spacer()
                 }
                 .padding(.horizontal, .spacing.x4)
                 .padding(.vertical, .spacing.x3)
-                .frame(maxWidth: 420)
+                .frame(maxWidth: .maxWidth.scannerBanner)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.black.opacity(0.78))
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .fill(Color.black.opacity(Double.opacity.textSecondary))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.surfaceStroke, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                                .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                         )
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -108,50 +169,84 @@ private extension ScannerView {
 
     var topBar: some View {
         HStack {
-            HStack(spacing: .spacing.x2) {
-                Image(systemName: profileManager.profile.currentLevel.systemImage)
-                    .font(.system(size: .fontSize.medium))
-                    .foregroundColor(.ecoLight)
-
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(profileManager.profile.currentLevel.displayName)
-                        .font(.system(size: .fontSize.xsmall, weight: .bold))
-                        .foregroundColor(.white)
-
-                    Text("common.xp_total".localized(with: profileManager.profile.totalXP))
-                        .font(.system(size: 10))
-                        .foregroundColor(.white.opacity(0.78))
-                }
-            }
-            .padding(.horizontal, .spacing.x4)
-            .padding(.vertical, .spacing.x2)
-            .background(Capsule().fill(.ultraThinMaterial))
-            .overlay(Capsule().stroke(Color.surfaceStroke, lineWidth: 0.8))
+            statusInfoContainer
 
             Spacer()
 
-            if profileManager.profile.currentStreak > 0 {
-                HStack(spacing: .spacing.base) {
-                    Image(systemName: "flame.fill")
-                        .font(.system(size: 14))
-                        .foregroundColor(.streakOrange)
-                    Text("\(profileManager.profile.currentStreak)")
-                        .font(.system(size: .fontSize.xsmall, weight: .bold))
-                        .foregroundColor(.streakOrange)
-                }
-                .padding(.horizontal, .spacing.x3)
-                .padding(.vertical, .spacing.x2)
-                .background(Capsule().fill(.ultraThinMaterial))
-                .overlay(Capsule().stroke(Color.surfaceStroke, lineWidth: 0.8))
-            }
+            debugBoxToggleButton
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.top, .spacing.x4)
     }
 
+    var statusInfoContainer: some View {
+        GlassEffectContainer(spacing: .spacing.x2) {
+            HStack(spacing: .spacing.x2) {
+                levelCapsule
+                if profileManager.profile.currentStreak > 0 {
+                    streakCapsule
+                }
+            }
+        }
+    }
+
+    var levelCapsule: some View {
+        HStack(spacing: .spacing.x2) {
+            Image(systemName: profileManager.profile.currentLevel.systemImage)
+                .font(.system(size: .fontSize.medium))
+                .foregroundColor(.ecoLight)
+
+            VStack(alignment: .leading, spacing: .spacing.none) {
+                Text(profileManager.profile.currentLevel.displayName)
+                    .font(.system(size: .fontSize.xsmall, weight: .bold))
+                    .foregroundColor(.white)
+
+                Text("common.xp_total".localized(with: profileManager.profile.totalXP))
+                    .font(.system(size: .fontSize.tiny))
+                    .foregroundColor(.white.opacity(Double.opacity.textSecondary))
+            }
+        }
+        .padding(.horizontal, .spacing.x4)
+        .padding(.vertical, .spacing.x2)
+        .scannerCapsuleClearInteractiveGlass()
+    }
+
+    var streakCapsule: some View {
+        HStack(spacing: .spacing.base) {
+            Image(systemName: "flame.fill")
+                .font(.system(size: .fontSize.small))
+                .foregroundColor(.streakOrange)
+            Text("\(profileManager.profile.currentStreak)")
+                .font(.system(size: .fontSize.xsmall, weight: .bold))
+                .foregroundColor(.streakOrange)
+        }
+        .padding(.horizontal, .spacing.x3)
+        .padding(.vertical, .spacing.x2)
+        .scannerCapsuleClearInteractiveGlass()
+    }
+
+    var debugBoxToggleButton: some View {
+        Button {
+            debugBoundingBoxEnabled.toggle()
+        } label: {
+            HStack(spacing: .spacing.base) {
+                Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
+                    .font(.system(size: .fontSize.smallPlus, weight: .semibold))
+                Text("BOX")
+                    .font(.system(size: .fontSize.tiny, weight: .bold))
+            }
+            .foregroundColor(debugBoundingBoxEnabled ? .ecoPrimary : .white.opacity(Double.opacity.controlDisabled))
+            .padding(.horizontal, .spacing.x3)
+            .padding(.vertical, .spacing.x2)
+            .scannerCapsuleClearInteractiveGlass()
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Toggle detection debug box")
+    }
+
     var scannerGuide: some View {
         ScannerGuideView(isActive: wasteDetector.currentDetection != nil)
-            .frame(width: 248, height: 248)
+            .frame(width: .size.scannerGuideFrame, height: .size.scannerGuideFrame)
             .padding(.horizontal, .spacing.x6)
             .allowsHitTesting(false)
     }
@@ -159,10 +254,10 @@ private extension ScannerView {
     func detectionLabel(for detection: WasteDetectionResult) -> some View {
         HStack(spacing: .spacing.x3) {
             Image(systemName: detection.category.systemImage)
-                .font(.system(size: 24))
+                .font(.system(size: .iconSize.large))
                 .foregroundColor(detection.category.color)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text(detection.category.displayName)
                     .font(.system(size: .fontSize.large, weight: .bold))
                     .foregroundColor(detection.category.color)
@@ -174,21 +269,21 @@ private extension ScannerView {
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.vertical, .spacing.x4)
-        .background(Capsule().fill(Color.black.opacity(0.72)))
+        .scannerCapsuleClearInteractiveGlass()
         .padding(.bottom, .spacing.x6)
     }
 
     var scanHint: some View {
         HStack(spacing: .spacing.x2) {
             Image(systemName: "viewfinder")
-                .font(.system(size: 14))
+                .font(.system(size: .fontSize.small))
             Text("scanner.hint".localized)
                 .font(.system(size: .fontSize.small))
         }
         .foregroundColor(.ecoSmoke)
         .padding(.horizontal, .spacing.x6)
         .padding(.vertical, .spacing.x3)
-        .background(Capsule().fill(Color.black.opacity(0.72)))
+        .scannerCapsuleClearInteractiveGlass()
         .padding(.bottom, .spacing.x6)
     }
 
@@ -207,18 +302,18 @@ private extension ScannerView {
                             endPoint: .bottomTrailing
                         )
                         : LinearGradient(
-                            colors: [.white.opacity(0.45), .white.opacity(0.28)],
+                            colors: [.white.opacity(Double.opacity.disabled), .white.opacity(Double.opacity.overlayStrong)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 4
+                        lineWidth: .lineWidth.strong
                     )
-                    .frame(width: 84, height: 84)
-                    .scaleEffect(scanPulse ? 1.12 : 1.0)
+                    .frame(width: .size.scannerButtonOuter, height: .size.scannerButtonOuter)
+                    .scaleEffect(scanPulse ? .scale.pulse : .scale.normal)
                     .animation(
                         hasDetection
-                        ? .easeInOut(duration: 1.15).repeatForever(autoreverses: true)
-                        : .easeOut(duration: 0.18),
+                        ? .easeInOut(duration: Double.duration.scannerPulse).repeatForever(autoreverses: true)
+                        : .easeOut(duration: Double.duration.quick),
                         value: scanPulse
                     )
 
@@ -231,20 +326,20 @@ private extension ScannerView {
                             endPoint: .bottomTrailing
                         )
                         : LinearGradient(
-                            colors: [.white.opacity(0.28), .white.opacity(0.18)],
+                            colors: [.white.opacity(Double.opacity.overlayStrong), .white.opacity(Double.opacity.strokeSoft)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 66, height: 66)
+                    .frame(width: .size.scannerButtonInner, height: .size.scannerButtonInner)
 
                 Image(systemName: "viewfinder")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(.white.opacity(hasDetection ? 1.0 : 0.65))
+                    .font(.system(size: .iconSize.xlarge, weight: .medium))
+                    .foregroundColor(.white.opacity(hasDetection ? Double.opacity.opaque : Double.opacity.iconInactive))
             }
         }
         .disabled(!hasDetection)
-        .opacity(hasDetection ? 1.0 : 0.45)
+        .opacity(hasDetection ? Double.opacity.opaque : Double.opacity.disabled)
         .buttonStyle(.plain)
     }
 }
@@ -272,11 +367,26 @@ private extension ScannerView {
         impact.impactOccurred()
         #endif
 
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.82)) {
+        withAnimation(.spring(response: Double.duration.feedback, dampingFraction: Double.damping.responsive)) {
             showFeedback = true
         }
 
+        if isGuidedMode && !hasCompletedGuidedFlow {
+            shouldCompleteGuidedFlowAfterFeedback = true
+        }
+
         presentNotifications()
+    }
+
+    func handleFeedbackDismiss() {
+        showFeedback = false
+
+        guard shouldCompleteGuidedFlowAfterFeedback else { return }
+        shouldCompleteGuidedFlowAfterFeedback = false
+
+        guard !hasCompletedGuidedFlow else { return }
+        hasCompletedGuidedFlow = true
+        onGuidedScanCompleted?()
     }
 
     func presentNotifications() {
@@ -301,15 +411,26 @@ private extension ScannerView {
 
     func enqueueBanner(title: String, message: String, icon: String, color: Color) {
         let banner = ScannerBanner(title: title, message: message, icon: icon, color: color)
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+        withAnimation(.spring(response: Double.duration.medium, dampingFraction: Double.damping.snappy)) {
             notifications.append(banner)
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
-            withAnimation(.easeInOut(duration: 0.2)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double.duration.notificationLifetime) {
+            withAnimation(.easeInOut(duration: Double.duration.fast)) {
                 notifications.removeAll { $0.id == banner.id }
             }
         }
+    }
+
+}
+
+private extension View {
+    func scannerCapsuleRegularGlass() -> some View {
+        self.glassEffect(.regular, in: .capsule(style: .continuous))
+    }
+
+    func scannerCapsuleClearInteractiveGlass() -> some View {
+        self.glassEffect(.clear.interactive(), in: .capsule(style: .continuous))
     }
 }
 

@@ -19,7 +19,7 @@ struct OnboardingView: View {
             )
             .ignoresSafeArea()
             .onAppear {
-                withAnimation(.linear(duration: 9).repeatForever(autoreverses: false)) {
+                withAnimation(.linear(duration: Double.duration.onboardingGradient).repeatForever(autoreverses: false)) {
                     gradientAngle = 360
                 }
             }
@@ -31,7 +31,7 @@ struct OnboardingView: View {
                 }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .animation(.easeInOut(duration: 0.25), value: currentPage)
+            .animation(.easeInOut(duration: Double.duration.short), value: currentPage)
         }
         .safeAreaInset(edge: .bottom) {
             controls
@@ -46,35 +46,49 @@ struct OnboardingView: View {
 private extension OnboardingView {
 
     func pageView(_ page: OnboardingPage, isFirst: Bool) -> some View {
-        VStack(spacing: .spacing.x5) {
-            Spacer(minLength: .spacing.x8)
+        ScrollView(showsIndicators: false) {
+            GlassEffectContainer {
+            VStack(spacing: .spacing.x5) {
+                heroView(isFirst: isFirst, systemImage: page.systemImage)
 
-            heroView(isFirst: isFirst, systemImage: page.systemImage)
+                VStack(spacing: .spacing.x2) {
+                    Text(page.titleKey.localized)
+                        .font(.system(size: .fontSize.huge, weight: .bold))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.ecoSmoke)
 
-            VStack(spacing: .spacing.x2) {
-                Text(page.titleKey.localized)
-                    .font(.system(size: .fontSize.huge, weight: .bold))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.ecoSmoke)
+                    Text(page.subtitleKey.localized)
+                        .font(.system(size: .fontSize.medium))
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.ecoSmoke.opacity(Double.opacity.textEmphasis))
+                        .lineSpacing(.lineSpacing.regular)
+                }
+                .frame(maxWidth: .maxWidth.onboardingText)
 
-                Text(page.subtitleKey.localized)
-                    .font(.system(size: .fontSize.medium))
-                    .multilineTextAlignment(.center)
-                    .foregroundColor(.ecoSmoke.opacity(0.9))
-                    .lineSpacing(4)
-            }
-            .frame(maxWidth: 620)
+                if !page.cards.isEmpty {
+                    VStack(spacing: .spacing.x3) {
+                        ForEach(page.cards) { card in
+                            onboardingCard(card)
+                        }
+                    }
+                    .frame(maxWidth: .maxWidth.onboardingCards)
+                }
 
-            VStack(spacing: .spacing.x3) {
-                ForEach(page.cards) { card in
-                    onboardingCard(card)
+                if page.showsCategories {
+                    categoriesSection
+                        .frame(maxWidth: .maxWidth.onboardingCards)
+                }
+
+                if let tutorialAssetName = page.tutorialImageAssetName {
+                    tutorialImageSection(assetName: tutorialAssetName)
+                    .frame(maxWidth: .maxWidth.onboardingTutorial)
                 }
             }
-            .frame(maxWidth: 680)
-
-            Spacer(minLength: .spacing.x8)
+            .padding(.horizontal, .spacing.x6)
+            .padding(.vertical, .spacing.x8)
+            .frame(maxWidth: .infinity)
+            }
         }
-        .padding(.horizontal, .spacing.x6)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
@@ -84,17 +98,21 @@ private extension OnboardingView {
             Image("EcoScannerLogoNoBg")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 220, height: 220)
-                .shadow(color: .white.opacity(0.25), radius: 26, y: 8)
+                .frame(width: .size.onboardingHeroLogo, height: .size.onboardingHeroLogo)
+                .shadow(
+                    color: .white.opacity(Double.opacity.glow),
+                    radius: .shadow.heroRadius,
+                    y: .shadow.mediumYOffset
+                )
         } else {
             ZStack {
                 Circle()
                     .fill(.ultraThinMaterial)
-                    .frame(width: 110, height: 110)
-                    .overlay(Circle().stroke(Color.surfaceStroke, lineWidth: 1))
+                    .frame(width: .size.onboardingSecondaryHero, height: .size.onboardingSecondaryHero)
+                    .overlay(Circle().stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline))
 
                 Image(systemName: systemImage)
-                    .font(.system(size: 50, weight: .light))
+                    .font(.system(size: .iconSize.jumbo, weight: .light))
                     .foregroundColor(.ecoSmoke)
             }
         }
@@ -105,7 +123,7 @@ private extension OnboardingView {
             Image(systemName: card.systemImage)
                 .font(.system(size: .fontSize.large, weight: .semibold))
                 .foregroundColor(.ecoSmoke)
-                .frame(width: 30)
+                .frame(width: .size.categoryBadgeIconSlot)
 
             VStack(alignment: .leading, spacing: .spacing.base) {
                 Text(card.titleKey.localized)
@@ -114,20 +132,75 @@ private extension OnboardingView {
 
                 Text(card.bodyKey.localized)
                     .font(.system(size: .fontSize.small))
-                    .foregroundColor(.ecoSmoke.opacity(0.85))
-                    .lineSpacing(3)
+                    .foregroundColor(.ecoSmoke.opacity(Double.opacity.textHeadline))
+                    .lineSpacing(.lineSpacing.compact)
             }
             Spacer(minLength: 0)
         }
         .padding(.spacing.x4)
+        .glassEffect(.clear, in: .rect(cornerRadius: .borderRadius.large))
+    }
+
+    var categoriesSection: some View {
+        VStack(alignment: .leading, spacing: .spacing.x3) {
+            VStack(alignment: .leading, spacing: .spacing.base) {
+                Text("onboarding.categories.title".localized)
+                    .font(.system(size: .fontSize.small, weight: .bold))
+                    .foregroundColor(.ecoSmoke)
+
+                Text("onboarding.categories.subtitle".localized)
+                    .font(.system(size: .fontSize.small))
+                    .foregroundColor(.ecoSmoke.opacity(Double.opacity.textHeadline))
+                    .lineSpacing(.lineSpacing.compact)
+            }
+
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: .spacing.x2),
+                    GridItem(.flexible(), spacing: .spacing.x2),
+                ],
+                spacing: .spacing.x2
+            ) {
+                ForEach(WasteCategory.allCases) { category in
+                    categoryBadge(category)
+                }
+            }
+        }
+        .padding(.spacing.x4)
+        .glassEffect(.clear, in: .rect(cornerRadius: .borderRadius.large))
+    }
+
+    func categoryBadge(_ category: WasteCategory) -> some View {
+        HStack(spacing: .spacing.x2) {
+            Image(systemName: category.systemImage)
+                .font(.system(size: .fontSize.small, weight: .semibold))
+                .foregroundColor(category.color)
+
+            Text(category.displayName)
+                .font(.system(size: .fontSize.small, weight: .semibold))
+                .foregroundColor(.ecoSmoke)
+                .lineLimit(1)
+                .minimumScaleFactor(0.85)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, .spacing.x2)
+        .padding(.horizontal, .spacing.x3)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(.ultraThinMaterial)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.surfaceStroke, lineWidth: 1)
-                )
+            RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
+                .fill(Color.white.opacity(Double.opacity.surfaceMuted))
         )
+    }
+
+    func tutorialImageSection(assetName: String) -> some View {
+        Image(assetName)
+            .resizable()
+            .scaledToFit()
+            .frame(maxWidth: .infinity)
+            .clipShape(RoundedRectangle(cornerRadius: .borderRadius.largePlus))
+            .overlay(
+                RoundedRectangle(cornerRadius: .borderRadius.largePlus)
+                    .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+            )
     }
 
     var controls: some View {
@@ -135,9 +208,12 @@ private extension OnboardingView {
             HStack(spacing: .spacing.x2) {
                 ForEach(0..<pages.count, id: \.self) { index in
                     Capsule()
-                        .fill(index == currentPage ? Color.ecoSmoke : Color.white.opacity(0.35))
-                        .frame(width: index == currentPage ? 24 : 8, height: 8)
-                        .animation(.spring(response: 0.3), value: currentPage)
+                        .fill(index == currentPage ? Color.ecoSmoke : Color.white.opacity(Double.opacity.pageIndicator))
+                        .frame(
+                            width: index == currentPage ? .size.indicatorActive : .size.indicator,
+                            height: .size.indicator
+                        )
+                        .animation(.spring(response: Double.duration.regular), value: currentPage)
                 }
             }
 
@@ -163,7 +239,7 @@ private extension OnboardingView {
 
                 Button {
                     if currentPage < pages.count - 1 {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+                        withAnimation(.spring(response: Double.duration.medium, dampingFraction: Double.damping.snappy)) {
                             currentPage += 1
                         }
                     } else {
@@ -184,99 +260,4 @@ private extension OnboardingView {
             }
         }
     }
-}
-
-// MARK: - Model
-
-private struct OnboardingPage {
-    let systemImage: String
-    let titleKey: String
-    let subtitleKey: String
-    let cards: [OnboardingCard]
-
-    static let pages: [OnboardingPage] = [
-        OnboardingPage(
-            systemImage: "globe.americas.fill",
-            titleKey: "onboarding.page1.title",
-            subtitleKey: "onboarding.page1.subtitle",
-            cards: [
-                OnboardingCard(
-                    id: "p1-card-1",
-                    systemImage: "person.3.fill",
-                    titleKey: "onboarding.page1.card1.title",
-                    bodyKey: "onboarding.page1.card1.body"
-                ),
-                OnboardingCard(
-                    id: "p1-card-2",
-                    systemImage: "building.2.fill",
-                    titleKey: "onboarding.page1.card2.title",
-                    bodyKey: "onboarding.page1.card2.body"
-                ),
-            ]
-        ),
-        OnboardingPage(
-            systemImage: "camera.viewfinder",
-            titleKey: "onboarding.page2.title",
-            subtitleKey: "onboarding.page2.subtitle",
-            cards: [
-                OnboardingCard(
-                    id: "p2-card-1",
-                    systemImage: "sparkles",
-                    titleKey: "onboarding.page2.card1.title",
-                    bodyKey: "onboarding.page2.card1.body"
-                ),
-                OnboardingCard(
-                    id: "p2-card-2",
-                    systemImage: "checkmark.seal.fill",
-                    titleKey: "onboarding.page2.card2.title",
-                    bodyKey: "onboarding.page2.card2.body"
-                ),
-            ]
-        ),
-        OnboardingPage(
-            systemImage: "arrow.3.trianglepath",
-            titleKey: "onboarding.page3.title",
-            subtitleKey: "onboarding.page3.subtitle",
-            cards: [
-                OnboardingCard(
-                    id: "p3-card-1",
-                    systemImage: "chart.bar.fill",
-                    titleKey: "onboarding.page3.card1.title",
-                    bodyKey: "onboarding.page3.card1.body"
-                ),
-                OnboardingCard(
-                    id: "p3-card-2",
-                    systemImage: "person.2.fill",
-                    titleKey: "onboarding.page3.card2.title",
-                    bodyKey: "onboarding.page3.card2.body"
-                ),
-            ]
-        ),
-        OnboardingPage(
-            systemImage: "chart.line.uptrend.xyaxis",
-            titleKey: "onboarding.page4.title",
-            subtitleKey: "onboarding.page4.subtitle",
-            cards: [
-                OnboardingCard(
-                    id: "p4-card-1",
-                    systemImage: "globe.americas.fill",
-                    titleKey: "onboarding.page4.card1.title",
-                    bodyKey: "onboarding.page4.card1.body"
-                ),
-                OnboardingCard(
-                    id: "p4-card-2",
-                    systemImage: "leaf.arrow.circlepath",
-                    titleKey: "onboarding.page4.card2.title",
-                    bodyKey: "onboarding.page4.card2.body"
-                ),
-            ]
-        ),
-    ]
-}
-
-private struct OnboardingCard: Identifiable {
-    let id: String
-    let systemImage: String
-    let titleKey: String
-    let bodyKey: String
 }

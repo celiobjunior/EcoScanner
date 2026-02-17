@@ -15,7 +15,7 @@ struct FeedbackView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.4)
+            Color.black.opacity(Double.opacity.scrim)
                 .ignoresSafeArea()
                 .onTapGesture(perform: onDismiss)
 
@@ -54,20 +54,24 @@ struct FeedbackView: View {
                 .padding(.vertical, .spacing.x6)
             }
             .background(
-                RoundedRectangle(cornerRadius: 24)
+                RoundedRectangle(cornerRadius: .borderRadius.xl)
                     .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.2), radius: 20, y: 10)
+                    .shadow(
+                        color: .black.opacity(Double.opacity.overlaySoft),
+                        radius: .shadow.largeRadius,
+                        y: .shadow.largeYOffset
+                    )
             )
-            .frame(maxWidth: 500)
+            .frame(maxWidth: .maxWidth.feedbackCard)
             .padding(.horizontal, .spacing.x6)
             .padding(.vertical, .spacing.x10)
-            .offset(y: showContent ? 0 : 600)
-            .animation(.spring(response: 0.5, dampingFraction: 0.8), value: showContent)
+            .offset(y: showContent ? .spacing.none : .size.feedbackHiddenOffset)
+            .animation(.spring(response: Double.duration.long, dampingFraction: Double.damping.medium), value: showContent)
         }
         .onAppear {
             showContent = true
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation(.spring(response: 0.6)) { xpAnimated = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double.duration.long) {
+                withAnimation(.spring(response: Double.duration.extraLong)) { xpAnimated = true }
             }
         }
     }
@@ -80,7 +84,7 @@ private extension FeedbackView {
     var materialHeader: some View {
         HStack(spacing: .spacing.x4) {
             Image(systemName: detection.category.systemImage)
-                .font(.system(size: 36))
+                .font(.system(size: .iconSize.hero))
                 .foregroundColor(detection.category.color)
             VStack(alignment: .leading, spacing: .spacing.base) {
                 Text("feedback.material_detected".localized)
@@ -95,7 +99,7 @@ private extension FeedbackView {
             }
             Spacer()
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 30))
+                .font(.system(size: .iconSize.xxlarge))
                 .foregroundColor(.ecoLight)
         }
         .padding(.horizontal)
@@ -108,8 +112,8 @@ private extension FeedbackView {
                 Text("common.xp_gain".localized(with: entry.xpEarned))
                     .font(.system(size: .fontSize.big, weight: .bold))
                     .foregroundColor(.xpGold)
-                    .scaleEffect(xpAnimated ? 1.0 : 0.5)
-                    .opacity(xpAnimated ? 1.0 : 0)
+                    .scaleEffect(xpAnimated ? .scale.normal : .scale.hidden)
+                    .opacity(xpAnimated ? Double.opacity.opaque : Double.opacity.none)
             }
 
             VStack(spacing: .spacing.base) {
@@ -128,15 +132,15 @@ private extension FeedbackView {
 
                 GeometryReader { geometry in
                     ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color(.systemGray5)).frame(height: 8)
-                        RoundedRectangle(cornerRadius: 4)
+                        RoundedRectangle(cornerRadius: .borderRadius.xsmall)
+                            .fill(Color(.systemGray5)).frame(height: .progress.thin)
+                        RoundedRectangle(cornerRadius: .borderRadius.xsmall)
                             .fill(LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .leading, endPoint: .trailing))
-                            .frame(width: geometry.size.width * profile.levelProgress, height: 8)
-                            .animation(.easeOut(duration: 0.8).delay(0.3), value: xpAnimated)
+                            .frame(width: geometry.size.width * profile.levelProgress, height: .progress.thin)
+                            .animation(.easeOut(duration: Double.duration.slow).delay(Double.duration.regular), value: xpAnimated)
                     }
                 }
-                .frame(height: 8)
+                .frame(height: .progress.thin)
             }
             .padding(.horizontal)
         }
@@ -146,7 +150,7 @@ private extension FeedbackView {
     var factSection: some View {
         HStack(alignment: .top, spacing: .spacing.x3) {
             Image(systemName: fact.isPositive ? "lightbulb.fill" : "exclamationmark.triangle.fill")
-                .font(.system(size: 22))
+                .font(.system(size: .iconSize.title))
                 .foregroundColor(fact.isPositive ? .ecoLight : .streakOrange)
 
             VStack(alignment: .leading, spacing: .spacing.base) {
@@ -156,10 +160,10 @@ private extension FeedbackView {
                 Text(fact.fact)
                     .font(.system(size: .fontSize.small))
                     .foregroundColor(.textPrimary)
-                    .lineSpacing(4)
+                    .lineSpacing(.lineSpacing.regular)
                 if let source = fact.source {
                     Text("feedback.source".localized(with: source))
-                        .font(.system(size: 10)).foregroundColor(.textSecondary)
+                        .font(.system(size: .fontSize.tiny)).foregroundColor(.textSecondary)
                 }
             }
         }
@@ -168,15 +172,15 @@ private extension FeedbackView {
 
     var carbonSection: some View {
         HStack(spacing: .spacing.x3) {
-            Image(systemName: "leaf.fill").font(.system(size: 20)).foregroundColor(.ecoLight)
-            VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: "leaf.fill").font(.system(size: .iconSize.medium)).foregroundColor(.ecoLight)
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text("feedback.this_collection_impact".localized)
                     .font(.system(size: .fontSize.xsmall)).foregroundColor(.textSecondary)
                 Text(String(format: "feedback.co2_saved_format".localized, entry.co2Saved))
                     .font(.system(size: .fontSize.medium, weight: .bold)).foregroundColor(.ecoPrimary)
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: .spacing.micro) {
                 Text("feedback.total_accumulated".localized)
                     .font(.system(size: .fontSize.xsmall)).foregroundColor(.textSecondary)
                 Text(String(format: "feedback.co2_total_format".localized, profile.totalCO2Saved))
@@ -188,12 +192,12 @@ private extension FeedbackView {
 
     var disposalSection: some View {
         HStack(alignment: .top, spacing: .spacing.x3) {
-            Image(systemName: "trash.circle.fill").font(.system(size: 24)).foregroundColor(detection.category.color)
-            VStack(alignment: .leading, spacing: 2) {
+            Image(systemName: "trash.circle.fill").font(.system(size: .iconSize.large)).foregroundColor(detection.category.color)
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text("feedback.correct_disposal".localized)
                     .font(.system(size: .fontSize.xsmall, weight: .bold)).foregroundColor(.textSecondary)
                 Text(detection.category.disposalInstruction)
-                    .font(.system(size: .fontSize.small)).foregroundColor(.textPrimary).lineSpacing(4)
+                    .font(.system(size: .fontSize.small)).foregroundColor(.textPrimary).lineSpacing(.lineSpacing.regular)
             }
         }
         .padding(.horizontal)
@@ -207,6 +211,6 @@ private extension FeedbackView {
         }
         .padding(.vertical, .spacing.x2)
         .padding(.horizontal, .spacing.x5)
-        .background(Capsule().fill(Color.streakOrange.opacity(0.15)))
+        .background(Capsule().fill(Color.streakOrange.opacity(Double.opacity.badge)))
     }
 }

@@ -1,88 +1,130 @@
 [
   {
     "metadataOutputVersion" : "3.0",
+    "storagePrecision" : "Mixed (Float16, Float32)",
     "outputSchema" : [
       {
+        "dataType" : "Double",
+        "hasShapeFlexibility" : "1",
         "isOptional" : "0",
-        "formattedType" : "String",
-        "type" : "String",
-        "name" : "target",
-        "shortDescription" : ""
+        "shapeFlexibility" : "0... × 6",
+        "shapeRange" : "[[0, -1], [6, 6]]",
+        "formattedType" : "MultiArray (Double 0 × 6)",
+        "type" : "MultiArray",
+        "shape" : "[0, 6]",
+        "name" : "confidence",
+        "shortDescription" : "Boxes × Class confidence (see user-defined metadata \"classes\")"
       },
       {
+        "dataType" : "Double",
+        "hasShapeFlexibility" : "1",
         "isOptional" : "0",
-        "keyType" : "String",
-        "formattedType" : "Dictionary (String → Double)",
-        "type" : "Dictionary",
-        "name" : "targetProbability",
-        "shortDescription" : ""
+        "shapeFlexibility" : "0... × 4",
+        "shapeRange" : "[[0, -1], [4, 4]]",
+        "formattedType" : "MultiArray (Double 0 × 4)",
+        "type" : "MultiArray",
+        "shape" : "[0, 4]",
+        "name" : "coordinates",
+        "shortDescription" : "Boxes × [x, y, width, height] (relative to image size)"
       }
     ],
     "modelParameters" : [
 
     ],
     "author" : "Celio Junior",
-    "specificationVersion" : 3,
+    "specificationVersion" : 5,
+    "computePrecision" : "Float16",
     "isUpdatable" : "0",
     "stateSchema" : [
 
     ],
     "availability" : {
-      "macOS" : "10.14",
-      "tvOS" : "12.0",
+      "macOS" : "11.0",
+      "tvOS" : "14.0",
       "visionOS" : "1.0",
       "watchOS" : "unavailable",
-      "iOS" : "12.0",
-      "macCatalyst" : "12.0"
+      "iOS" : "14.0",
+      "macCatalyst" : "14.0"
     },
     "modelType" : {
-      "name" : "MLModelType_imageClassifier",
+      "name" : "MLModelType_pipeline",
       "structure" : [
         {
           "name" : "MLModelType_visionFeaturePrint"
         },
         {
-          "name" : "MLModelType_glmClassifier"
+          "name" : "MLModelType_neuralNetwork"
+        },
+        {
+          "name" : "MLModelType_nonMaximumSuppression"
         }
       ]
     },
     "inputSchema" : [
       {
-        "height" : "299",
-        "colorspace" : "BGR",
-        "isOptional" : "0",
-        "width" : "299",
-        "isColor" : "1",
         "formattedType" : "Image (Color 299 × 299)",
-        "hasSizeFlexibility" : "0",
+        "hasSizeFlexibility" : "1",
+        "shortDescription" : "Input image",
+        "sizeRange" : "[[299, -1], [299, -1]]",
+        "width" : "299",
         "type" : "Image",
-        "shortDescription" : "",
-        "name" : "image"
+        "isColor" : "1",
+        "height" : "299",
+        "sizeFlexibility" : "299... × 299...",
+        "colorspace" : "RGB",
+        "name" : "image",
+        "isOptional" : "0"
+      },
+      {
+        "isOptional" : "1",
+        "formattedType" : "Double?",
+        "type" : "Double",
+        "name" : "iouThreshold",
+        "shortDescription" : "The maximum allowed overlap (as intersection-over-union ratio) for any pair of output bounding boxes. Defaults to 0.33."
+      },
+      {
+        "isOptional" : "1",
+        "formattedType" : "Double?",
+        "type" : "Double",
+        "name" : "confidenceThreshold",
+        "shortDescription" : "The minimum confidence score for an output bounding box. Defaults to 0.4.\""
       }
     ],
     "classLabels" : [
-      "battery",
-      "biological",
-      "brown-glass",
-      "cardboard",
-      "clothes",
-      "green-glass",
-      "metal",
-      "paper",
-      "plastic",
-      "shoes",
-      "trash",
-      "white-glass"
+      "BIODEGRADABLE",
+      "CARDBOARD",
+      "GLASS",
+      "METAL",
+      "PAPER",
+      "PLASTIC"
     ],
-    "generatedClassName" : "EcoScanner_4",
+    "generatedClassName" : "EcoScannerObjDetec",
     "userDefinedMetadata" : {
-      "com.apple.coreml.model.preview.type" : "imageClassifier",
-      "com.apple.createml.training.started" : "2026-02-10T00:02:51Z",
+      "com.apple.coreml.model.preview.type" : "objectDetector",
+      "com.apple.createml.training.started" : "2026-02-15T06:55:42Z",
       "com.apple.createml.version" : "26.2.0",
-      "com.apple.createml.training.finished" : "2026-02-10T00:05:17Z",
+      "com.apple.createml.training.finished" : "2026-02-15T08:09:47Z",
       "com.apple.createml.app.tag" : "175.7",
-      "com.apple.createml.model.created" : "2026-02-10T00:05:17Z",
+      "iterations" : "12000",
+      "com.apple.createml.model.created" : "2026-02-15T08:09:47Z",
       "com.apple.createml.app.version" : "6.2"
+    },
+    "neuralNetworkLayerTypeHistogram" : {
+      "LoadConstant" : 2,
+      "Concat" : 13,
+      "ActivationReLU" : 20,
+      "Convolution" : 110,
+      "Scale" : 2,
+      "Softmax" : 45,
+      "Squeeze" : 2,
+      "Reshape" : 20,
+      "Permute" : 14,
+      "Multiply" : 2,
+      "ExpandDims" : 2,
+      "Add" : 1,
+      "UnaryExp" : 1,
+      "Slice" : 3,
+      "BatchNorm" : 20
     },
     "method" : "predict"
   }

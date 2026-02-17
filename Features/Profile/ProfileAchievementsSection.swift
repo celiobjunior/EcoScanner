@@ -27,33 +27,30 @@ extension ProfileView {
                     Button { selectedAchievement = achievement } label: {
                         VStack(spacing: .spacing.base) {
                             Image(systemName: achievement.systemImage)
-                                .font(.system(size: 30))
+                                .font(.system(size: .iconSize.xxlarge))
                                 .foregroundColor(isUnlocked ? .ecoPrimary : .achievementLocked)
-                                .opacity(isUnlocked ? 1 : 0.78)
+                                .opacity(isUnlocked ? Double.opacity.opaque : Double.opacity.textSecondary)
 
                             Text(achievement.title)
-                                .font(.system(size: 11, weight: .medium))
-                                .foregroundColor(isUnlocked ? .ecoSmoke : .ecoSmoke.opacity(0.48))
+                                .font(.system(size: .fontSize.caption, weight: .medium))
+                                .foregroundColor(isUnlocked ? .ecoSmoke : .ecoSmoke.opacity(Double.opacity.disabledStrong))
                                 .multilineTextAlignment(.center)
                                 .lineLimit(2)
 
                             Text(progress.label)
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(isUnlocked ? .ecoSmoke.opacity(0.82) : .ecoSmoke.opacity(0.62))
+                                .font(.system(size: .fontSize.tiny, weight: .semibold))
+                                .foregroundColor(isUnlocked ? .ecoSmoke.opacity(Double.opacity.textStrong) : .ecoSmoke.opacity(Double.opacity.textLow))
 
                             progressBar(progress: progress, tint: isUnlocked ? .ecoPrimary : .achievementLocked)
                         }
                         .padding(.horizontal, .spacing.x2)
                         .frame(width: achievementCardSize.width, height: achievementCardSize.height)
                         .background(
-                            RoundedRectangle(cornerRadius: 14)
-                                .fill(isUnlocked ? Color.ecoPrimary.opacity(0.24) : Color.white.opacity(0.08))
+                            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 14)
-                                        .stroke(
-                                            isUnlocked ? Color.ecoPrimary.opacity(0.55) : Color.achievementLocked.opacity(0.35),
-                                            lineWidth: 1
-                                        )
+                                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                                 )
                         )
                     }
@@ -70,101 +67,119 @@ extension ProfileView {
         let isUnlocked = profileManager.profile.unlockedAchievementIDs.contains(achievement.id)
         let progress = progress(for: achievement)
 
-        return ScrollView(showsIndicators: false) {
-            VStack(spacing: .spacing.x5) {
-                VStack(spacing: .spacing.x3) {
-                    Image(systemName: achievement.systemImage)
-                        .font(.system(size: 40))
-                        .foregroundStyle(
-                            isUnlocked
-                            ? LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            : LinearGradient(colors: [.achievementLocked, .achievementLocked.opacity(0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
+        return NavigationStack {
+            ZStack {
+                Color.ecoInk.ignoresSafeArea()
 
-                    Text(achievement.title)
-                        .font(.system(size: .fontSize.big, weight: .bold))
-                        .foregroundColor(.ecoSmoke)
-                        .multilineTextAlignment(.center)
-                }
+                ScrollView(showsIndicators: false) {
+                        VStack(spacing: .spacing.x5) {
+                            VStack(spacing: .spacing.x3) {
+                                Image(systemName: achievement.systemImage)
+                                    .font(.system(size: .iconSize.giant))
+                                    .foregroundStyle(
+                                        isUnlocked
+                                        ? LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                        : LinearGradient(colors: [.achievementLocked, .achievementLocked.opacity(Double.opacity.disabled)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    )
 
-                Text(achievement.description)
-                    .font(.system(size: .fontSize.small))
-                    .foregroundColor(.ecoSmoke.opacity(0.8))
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.spacing.x4)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.white.opacity(0.06))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(Color.surfaceStroke, lineWidth: 1)
+                                Text(achievement.title)
+                                    .font(.system(size: .fontSize.big, weight: .bold))
+                                    .foregroundColor(.ecoSmoke)
+                                    .multilineTextAlignment(.center)
+                            }
+
+                            Text(achievement.description)
+                                .font(.system(size: .fontSize.small))
+                                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textTertiary))
+                                .multilineTextAlignment(.leading)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.spacing.x4)
+                                .background(
+                                    RoundedRectangle(cornerRadius: .borderRadius.large)
+                                        .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: .borderRadius.large)
+                                                .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                                        )
+                                )
+
+                            VStack(alignment: .leading, spacing: .spacing.x3) {
+                                HStack(spacing: .spacing.x2) {
+                                    Image(systemName: "target")
+                                        .foregroundColor(.ecoPrimary)
+                                    Text("profile.requirement".localized)
+                                        .font(.system(size: .fontSize.xsmall, weight: .bold))
+                                        .foregroundColor(.ecoSmoke.opacity(Double.opacity.textSecondary))
+                                }
+
+                                Text(achievement.requirement.summary)
+                                    .font(.system(size: .fontSize.medium, weight: .semibold))
+                                    .foregroundColor(.ecoSmoke)
+                                    .fixedSize(horizontal: false, vertical: true)
+
+                                Divider()
+                                    .overlay(Color.surfaceStroke)
+
+                                HStack {
+                                    Text("profile.progress_label".localized)
+                                        .font(.system(size: .fontSize.xsmall, weight: .bold))
+                                        .foregroundColor(.ecoSmoke.opacity(Double.opacity.textSecondary))
+                                    Spacer()
+                                    Text(progress.label)
+                                        .font(.system(size: .fontSize.xsmall, weight: .semibold))
+                                        .foregroundColor(.ecoSmoke)
+                                }
+
+                                progressBar(progress: progress, tint: isUnlocked ? .ecoPrimary : .achievementLocked)
+                            }
+                            .padding(.spacing.x4)
+                            .background(
+                                RoundedRectangle(cornerRadius: .borderRadius.large)
+                                    .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: .borderRadius.large)
+                                            .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                                    )
                             )
-                    )
 
-                VStack(alignment: .leading, spacing: .spacing.x3) {
-                    HStack(spacing: .spacing.x2) {
-                        Image(systemName: "target")
-                            .foregroundColor(.ecoPrimary)
-                        Text("profile.requirement".localized)
-                            .font(.system(size: .fontSize.xsmall, weight: .bold))
-                            .foregroundColor(.ecoSmoke.opacity(0.78))
-                    }
-
-                    Text(achievement.requirement.summary)
-                        .font(.system(size: .fontSize.medium, weight: .semibold))
-                        .foregroundColor(.ecoSmoke)
-                        .fixedSize(horizontal: false, vertical: true)
-
-                    Divider()
-                        .overlay(Color.surfaceStroke)
-
-                    HStack {
-                        Text("profile.progress_label".localized)
-                            .font(.system(size: .fontSize.xsmall, weight: .bold))
-                            .foregroundColor(.ecoSmoke.opacity(0.78))
-                        Spacer()
-                        Text(progress.label)
-                            .font(.system(size: .fontSize.xsmall, weight: .semibold))
-                            .foregroundColor(.ecoSmoke)
-                    }
-
-                    progressBar(progress: progress, tint: isUnlocked ? .ecoPrimary : .achievementLocked)
+                            HStack(spacing: .spacing.x2) {
+                                Image(systemName: isUnlocked ? "checkmark.seal.fill" : "lock.fill")
+                                    .foregroundColor(isUnlocked ? .ecoPrimary : .achievementLocked)
+                                Text(isUnlocked ? "profile.unlocked".localized : "profile.locked".localized)
+                                    .font(.system(size: .fontSize.small, weight: .semibold))
+                                    .foregroundColor(isUnlocked ? .ecoPrimary : .achievementLocked)
+                            }
+                            .padding(.vertical, .spacing.x2)
+                            .padding(.horizontal, .spacing.x5)
+                            .background(
+                                Capsule()
+                                    .fill((isUnlocked ? Color.ecoPrimary : Color.achievementLocked).opacity(Double.opacity.chip))
+                                    .overlay(
+                                        Capsule()
+                                            .stroke((isUnlocked ? Color.ecoPrimary : Color.achievementLocked).opacity(Double.opacity.accentStroke), lineWidth: .lineWidth.hairline)
+                                    )
+                            )
+                        }
+                        .padding(.horizontal, .spacing.x6)
+                        .padding(.top, .spacing.x6)
+                        .padding(.bottom, .spacing.x8)
                 }
-                .padding(.spacing.x4)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.white.opacity(0.06))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.surfaceStroke, lineWidth: 1)
-                        )
-                )
-
-                HStack(spacing: .spacing.x2) {
-                    Image(systemName: isUnlocked ? "checkmark.seal.fill" : "lock.fill")
-                        .foregroundColor(isUnlocked ? .ecoPrimary : .achievementLocked)
-                    Text(isUnlocked ? "profile.unlocked".localized : "profile.locked".localized)
-                        .font(.system(size: .fontSize.small, weight: .semibold))
-                        .foregroundColor(isUnlocked ? .ecoPrimary : .achievementLocked)
-                }
-                .padding(.vertical, .spacing.x2)
-                .padding(.horizontal, .spacing.x5)
-                .background(
-                    Capsule()
-                        .fill((isUnlocked ? Color.ecoPrimary : Color.achievementLocked).opacity(0.16))
-                        .overlay(
-                            Capsule()
-                                .stroke((isUnlocked ? Color.ecoPrimary : Color.achievementLocked).opacity(0.56), lineWidth: 1)
-                        )
-                )
             }
-            .padding(.horizontal, .spacing.x6)
-            .padding(.top, .spacing.x6)
-            .padding(.bottom, .spacing.x8)
+            .navigationTitle(achievement.title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(Color.ecoInk, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("help.close".localized) {
+                        selectedAchievement = nil
+                    }
+                    .foregroundColor(.ecoLight)
+                }
+            }
         }
-        .background(Color.ecoInk.ignoresSafeArea())
-        .presentationDetents([.height(540), .large])
+        .presentationDetents([.height(.size.achievementSheetHeight), .large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Color.ecoInk)
     }
@@ -207,17 +222,17 @@ extension ProfileView {
     @ViewBuilder
     private func progressBar(progress: AchievementProgress, tint: Color) -> some View {
         GeometryReader { geometry in
-            let fillWidth = progress.fraction > 0 ? max(6, geometry.size.width * progress.fraction) : 0
+            let fillWidth = progress.fraction > 0 ? max(.size.minimumProgressFill, geometry.size.width * progress.fraction) : 0
             ZStack(alignment: .leading) {
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(Color.white.opacity(0.14))
-                    .frame(height: 8)
-                RoundedRectangle(cornerRadius: 4)
-                    .fill(tint.opacity(0.92))
-                    .frame(width: fillWidth, height: 8)
+                RoundedRectangle(cornerRadius: .borderRadius.xsmall)
+                    .fill(Color.white.opacity(Double.opacity.track))
+                    .frame(height: .progress.thin)
+                RoundedRectangle(cornerRadius: .borderRadius.xsmall)
+                    .fill(tint.opacity(Double.opacity.nearOpaque))
+                    .frame(width: fillWidth, height: .progress.thin)
             }
         }
-        .frame(height: 8)
+        .frame(height: .progress.thin)
     }
 }
 

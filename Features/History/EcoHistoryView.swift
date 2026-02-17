@@ -20,7 +20,7 @@ struct EcoHistoryView: View {
             ZStack {
                 Color.ecoInk.ignoresSafeArea()
 
-                VStack(spacing: 0) {
+                VStack(spacing: .spacing.none) {
                     categoryFilter.padding(.vertical, .spacing.x3)
 
                     if entries.isEmpty {
@@ -46,7 +46,7 @@ struct EcoHistoryView: View {
                         .scrollContentBackground(.hidden)
                     }
                 }
-                .frame(maxWidth: 1000)
+                .frame(maxWidth: .maxWidth.appContent)
                 .frame(maxWidth: .infinity)
             }
             .navigationTitle("history.title".localized)
@@ -66,11 +66,11 @@ private extension EcoHistoryView {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: .spacing.x2) {
                 FilterChip(label: "history.all_filter".localized, systemImage: "list.bullet", isSelected: selectedFilter == nil, color: .ecoPrimary) {
-                    withAnimation(.spring(response: 0.3)) { selectedFilter = nil }
+                    withAnimation(.spring(response: Double.duration.regular)) { selectedFilter = nil }
                 }
                 ForEach(WasteCategory.allCases) { category in
                     FilterChip(label: category.displayName, systemImage: category.systemImage, isSelected: selectedFilter == category, color: category.color) {
-                        withAnimation(.spring(response: 0.3)) { selectedFilter = selectedFilter == category ? nil : category }
+                        withAnimation(.spring(response: Double.duration.regular)) { selectedFilter = selectedFilter == category ? nil : category }
                     }
                 }
             }
@@ -80,7 +80,7 @@ private extension EcoHistoryView {
 
     var summaryHeader: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text("history.collections_count".localized(with: entries.count))
                     .font(.system(size: .fontSize.small, weight: .bold))
                     .foregroundColor(.ecoSmoke)
@@ -91,25 +91,28 @@ private extension EcoHistoryView {
             Spacer()
             let totalXP = entries.reduce(0) { $0 + $1.xpEarned }
             HStack(spacing: .spacing.base) {
-                Image(systemName: "star.fill").foregroundColor(.xpGold).font(.system(size: 12))
+                Image(systemName: "star.fill").foregroundColor(.xpGold).font(.system(size: .iconSize.xsmall))
                 Text("common.xp_total".localized(with: totalXP)).font(.system(size: .fontSize.xsmall, weight: .bold)).foregroundColor(.xpGold)
             }
         }
         .frame(maxWidth: .infinity)
         .padding(.spacing.x4)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.08))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.surfaceStroke, lineWidth: 1))
+            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                )
         )
     }
 
     var emptyState: some View {
         VStack(spacing: .spacing.x6) {
             Spacer()
-            Image(systemName: "clock.arrow.circlepath").font(.system(size: 48)).foregroundColor(.ecoSmoke.opacity(0.62))
+            Image(systemName: "clock.arrow.circlepath").font(.system(size: .iconSize.display)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow))
             Text("history.empty.title".localized).font(.system(size: .fontSize.large, weight: .medium)).foregroundColor(.ecoSmoke)
-            Text("history.empty.description".localized).font(.system(size: .fontSize.small)).foregroundColor(.ecoSmoke.opacity(0.62)).multilineTextAlignment(.center)
+            Text("history.empty.description".localized).font(.system(size: .fontSize.small)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow)).multilineTextAlignment(.center)
             Spacer()
         }
     }
@@ -118,35 +121,38 @@ private extension EcoHistoryView {
         let category = entry.category ?? .biodegradable
         return HStack(spacing: .spacing.x4) {
             Image(systemName: category.systemImage)
-                .font(.system(size: 20)).foregroundColor(category.color)
-                .frame(width: 44, height: 44)
-                .background(Circle().fill(category.color.opacity(0.15)))
+                .font(.system(size: .iconSize.medium)).foregroundColor(category.color)
+                .frame(width: .size.historyCategoryIcon, height: .size.historyCategoryIcon)
+                .background(Circle().fill(category.color.opacity(Double.opacity.badge)))
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text(category.displayName).font(.system(size: .fontSize.medium, weight: .semibold)).foregroundColor(.ecoSmoke)
                 HStack(spacing: .spacing.x2) {
                     Text("common.co2_mass".localized(with: entry.co2Saved))
                         .font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoPrimary)
-                    Text("•").foregroundColor(.ecoSmoke.opacity(0.6))
+                    Text("•").foregroundColor(.ecoSmoke.opacity(Double.opacity.subtleDivider))
                     Text("common.percent".localized(with: Int(entry.confidence * 100)))
-                        .font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoSmoke.opacity(0.62))
+                        .font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow))
                 }
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                HStack(spacing: 2) {
-                    Image(systemName: "star.fill").font(.system(size: 10)).foregroundColor(.xpGold)
+            VStack(alignment: .trailing, spacing: .spacing.micro) {
+                HStack(spacing: .spacing.micro) {
+                    Image(systemName: "star.fill").font(.system(size: .iconSize.tiny)).foregroundColor(.xpGold)
                     Text("common.xp_gain".localized(with: entry.xpEarned)).font(.system(size: .fontSize.xsmall, weight: .bold)).foregroundColor(.xpGold)
                 }
-                Text(entry.timestamp, style: .time).font(.system(size: 10)).foregroundColor(.ecoSmoke.opacity(0.62))
+                Text(entry.timestamp, style: .time).font(.system(size: .fontSize.tiny)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow))
             }
         }
         .padding(.horizontal, .spacing.x2)
         .padding(.vertical, .spacing.x3)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.white.opacity(0.08))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.surfaceStroke, lineWidth: 1))
+            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                )
         )
     }
 }
@@ -163,14 +169,14 @@ struct FilterChip: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: .spacing.base) {
-                Image(systemName: systemImage).font(.system(size: 12))
+                Image(systemName: systemImage).font(.system(size: .iconSize.xsmall))
                 Text(label).font(.system(size: .fontSize.xsmall, weight: isSelected ? .bold : .regular))
             }
             .padding(.horizontal, .spacing.x4)
             .padding(.vertical, .spacing.x2)
-            .background(Capsule().fill(isSelected ? color.opacity(0.2) : Color.white.opacity(0.08)))
-            .overlay(Capsule().strokeBorder(isSelected ? color : .clear, lineWidth: 1.5))
-            .foregroundColor(isSelected ? color : .ecoSmoke.opacity(0.68))
+            .background(Capsule().fill(isSelected ? color.opacity(Double.opacity.overlaySoft) : Color.white.opacity(Double.opacity.surfaceMuted)))
+            .overlay(Capsule().strokeBorder(isSelected ? color : .clear, lineWidth: .lineWidth.thin))
+            .foregroundColor(isSelected ? color : .ecoSmoke.opacity(Double.opacity.textDim))
         }
     }
 }

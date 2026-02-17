@@ -37,14 +37,14 @@ enum WasteCategory: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var color: Color {
         switch self {
-        case .plastic:       return Color(hex: 0xFFD700)
-        case .glass:         return Color(hex: 0x2ECC71)
-        case .metal:         return Color(hex: 0x95A5A6)
-        case .paper:         return Color(hex: 0x3498DB)
-        case .cardboard:     return Color(hex: 0xD4A574)
-        case .electronic:    return Color(hex: 0xE74C3C)
-        case .biodegradable: return Color(hex: 0x27AE60)
-        case .textile:       return Color(hex: 0x9B59B6)
+        case .plastic:       return .wastePlastic
+        case .glass:         return .wasteGlass
+        case .metal:         return .wasteMetal
+        case .paper:         return .wastePaper
+        case .cardboard:     return .wasteCardboard
+        case .electronic:    return .wasteElectronic
+        case .biodegradable: return .wasteBiodegradable
+        case .textile:       return .wasteTextile
         }
     }
 
