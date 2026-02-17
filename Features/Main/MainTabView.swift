@@ -79,6 +79,7 @@ private extension MainTabView {
                 }
             }
         }
+        .tint(.ecoPrimary)
         .navigationTitle("app.name".localized)
         #if os(macOS)
         .navigationSplitViewColumnWidth(min: 180, ideal: 220)

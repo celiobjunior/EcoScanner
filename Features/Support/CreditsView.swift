@@ -54,8 +54,8 @@ struct CreditsView: View {
                     VStack(alignment: .leading, spacing: .spacing.x4) {
                         Text("credits.intro".localized)
                             .font(.system(size: .fontSize.medium))
-                            .foregroundColor(.ecoSmoke.opacity(0.86))
-                            .lineSpacing(3)
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textPrimary))
+                            .lineSpacing(.lineSpacing.compact)
 
                         linksSection(titleKey: "credits.section.datasets", links: datasetLinks)
                         linksSection(titleKey: "credits.section.project", links: projectLinks)
@@ -63,7 +63,7 @@ struct CreditsView: View {
                     }
                     .padding(.horizontal, .spacing.x6)
                     .padding(.vertical, .spacing.x6)
-                    .frame(maxWidth: 840)
+                    .frame(maxWidth: .maxWidth.creditsContent)
                     .frame(maxWidth: .infinity)
                 }
             }
@@ -100,11 +100,11 @@ private extension CreditsView {
         }
         .padding(.spacing.x4)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.08))
+            RoundedRectangle(cornerRadius: .borderRadius.large)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: .borderRadius.large)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                 )
         )
     }
@@ -126,31 +126,31 @@ private extension CreditsView {
             Image(systemName: link.icon)
                 .font(.system(size: .fontSize.small, weight: .semibold))
                 .foregroundColor(.ecoPrimary)
-                .frame(width: 22)
+                .frame(width: .size.creditsCardIconSlot)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text(link.titleKey.localized)
                     .font(.system(size: .fontSize.small, weight: .bold))
                     .foregroundColor(.ecoSmoke)
 
                 Text(link.detailKey.localized)
                     .font(.system(size: .fontSize.xsmall))
-                    .foregroundColor(.ecoSmoke.opacity(0.74))
+                    .foregroundColor(.ecoSmoke.opacity(Double.opacity.textSubdued))
             }
 
             Spacer(minLength: 0)
 
             Image(systemName: "arrow.up.right.square")
-                .font(.system(size: 12, weight: .semibold))
+                .font(.system(size: .iconSize.xsmall, weight: .semibold))
                 .foregroundColor(.ecoLight)
         }
         .padding(.spacing.x3)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.white.opacity(0.06))
+            RoundedRectangle(cornerRadius: .borderRadius.medium)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: .borderRadius.medium)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                 )
         )
     }

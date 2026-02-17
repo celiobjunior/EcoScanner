@@ -20,8 +20,8 @@ struct HelpTutorialView: View {
                     VStack(alignment: .leading, spacing: .spacing.x4) {
                         Text("help.intro".localized)
                             .font(.system(size: .fontSize.medium))
-                            .foregroundColor(.ecoSmoke.opacity(0.86))
-                            .lineSpacing(3)
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textPrimary))
+                            .lineSpacing(.lineSpacing.compact)
 
                         simpleCard(
                             icon: "target",
@@ -45,7 +45,7 @@ struct HelpTutorialView: View {
                     }
                     .padding(.horizontal, .spacing.x6)
                     .padding(.vertical, .spacing.x6)
-                    .frame(maxWidth: 780)
+                    .frame(maxWidth: .maxWidth.helpContent)
                     .frame(maxWidth: .infinity)
                 }
             }
@@ -78,7 +78,7 @@ private extension HelpTutorialView {
             Image(systemName: icon)
                 .font(.system(size: .fontSize.medium, weight: .semibold))
                 .foregroundColor(.ecoPrimary)
-                .frame(width: 26)
+                .frame(width: .size.supportCardIconSlot)
 
             VStack(alignment: .leading, spacing: .spacing.base) {
                 Text(title)
@@ -87,19 +87,19 @@ private extension HelpTutorialView {
 
                 Text(body)
                     .font(.system(size: .fontSize.small))
-                    .foregroundColor(.ecoSmoke.opacity(0.84))
-                    .lineSpacing(3)
+                    .foregroundColor(.ecoSmoke.opacity(Double.opacity.textBody))
+                    .lineSpacing(.lineSpacing.compact)
             }
 
             Spacer(minLength: 0)
         }
         .padding(.spacing.x4)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.08))
+            RoundedRectangle(cornerRadius: .borderRadius.large)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: .borderRadius.large)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                 )
         )
     }
@@ -138,27 +138,27 @@ private extension HelpTutorialView {
                 .padding(.horizontal, .spacing.x4)
                 .background(
                     Capsule()
-                        .fill(Color.white.opacity(0.06))
+                        .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                         .overlay(
                             Capsule()
-                                .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                                .stroke(Color.white.opacity(Double.opacity.strokeSoft), lineWidth: .lineWidth.hairline)
                         )
                 )
             }
             .buttonStyle(.plain)
 
             Text("help.revisit_hint".localized)
-                .font(.system(size: 11))
-                .foregroundColor(.ecoSmoke.opacity(0.68))
+                .font(.system(size: .fontSize.caption))
+                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textDim))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.spacing.x4)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.08))
+            RoundedRectangle(cornerRadius: .borderRadius.large)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.18), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: .borderRadius.large)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                 )
         )
     }

@@ -8,7 +8,7 @@ struct ScannerAVCaptureView: UIViewRepresentable {
 
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
-    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = true
+    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
 
     func makeUIView(context: Context) -> UIView {
         context.coordinator.makeUIView(with: cameraManager.captureSession)
@@ -76,11 +76,11 @@ extension ScannerAVCaptureView {
 
             let selectedLayer = CAShapeLayer()
             selectedLayer.fillColor = UIColor.clear.cgColor
-            selectedLayer.lineWidth = 2.4
+            selectedLayer.lineWidth = .lineWidth.debugBox
             selectedLayer.lineDashPattern = nil
             selectedLayer.shadowColor = UIColor.black.cgColor
-            selectedLayer.shadowOpacity = 0.28
-            selectedLayer.shadowRadius = 3
+            selectedLayer.shadowOpacity = Float(Double.opacity.overlayStrong)
+            selectedLayer.shadowRadius = .shadow.smallRadius
             selectedLayer.shadowOffset = .zero
             selectedLayer.isHidden = true
             uiView.layer.addSublayer(selectedLayer)
@@ -156,7 +156,7 @@ extension ScannerAVCaptureView {
             let selectedBox = selectedCandidate?.boundingBox ?? fallbackDetection?.boundingBox
             let selectedColor = UIColor(
                 selectedCandidate?.category.color ?? fallbackDetection?.category.color ?? .ecoLight
-            ).withAlphaComponent(0.95)
+            ).withAlphaComponent(Double.opacity.almostOpaque)
 
             render(
                 layer: selectedLayer,
@@ -178,7 +178,7 @@ extension ScannerAVCaptureView {
             }
 
             layer.strokeColor = color.cgColor
-            layer.path = UIBezierPath(roundedRect: layerRect, cornerRadius: 8).cgPath
+            layer.path = UIBezierPath(roundedRect: layerRect, cornerRadius: .borderRadius.small).cgPath
             layer.isHidden = false
         }
 

@@ -32,7 +32,7 @@ private struct GuidedCompletionView: View {
 
             VStack(spacing: .spacing.x5) {
                 Image(systemName: "checkmark.seal.fill")
-                    .font(.system(size: 56, weight: .bold))
+                    .font(.system(size: .iconSize.mega, weight: .bold))
                     .foregroundColor(.ecoPrimary)
 
                 Text("guided.completion.title".localized)
@@ -42,10 +42,10 @@ private struct GuidedCompletionView: View {
 
                 Text("guided.completion.body".localized)
                     .font(.system(size: .fontSize.medium))
-                    .foregroundColor(.ecoSmoke.opacity(0.86))
+                    .foregroundColor(.ecoSmoke.opacity(Double.opacity.textPrimary))
                     .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .frame(maxWidth: 620)
+                    .lineSpacing(.lineSpacing.compact)
+                    .frame(maxWidth: .maxWidth.onboardingText)
 
                 Button {
                     onContinue()

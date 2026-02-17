@@ -10,7 +10,7 @@ struct ScannerView: View {
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
     @EnvironmentObject private var profileManager: UserProfileManager
-    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = true
+    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
 
     @State private var showFeedback = false
     @State private var lastEntry: CollectionEntry?
@@ -116,17 +116,17 @@ private extension ScannerView {
 
             Text("guided.scan.body".localized)
                 .font(.system(size: .fontSize.xsmall))
-                .foregroundColor(.ecoSmoke.opacity(0.9))
-                .lineSpacing(3)
+                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textEmphasis))
+                .lineSpacing(.lineSpacing.compact)
         }
-        .frame(maxWidth: 520, alignment: .leading)
+        .frame(maxWidth: .maxWidth.guidedCard, alignment: .leading)
         .padding(.spacing.x4)
         .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color.black.opacity(0.72))
+            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                .fill(Color.black.opacity(Double.opacity.cardOverlay))
                 .overlay(
-                    RoundedRectangle(cornerRadius: 14)
-                        .stroke(Color.surfaceStroke, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                 )
         )
     }
@@ -137,26 +137,26 @@ private extension ScannerView {
                 HStack(spacing: .spacing.x2) {
                     Image(systemName: banner.icon)
                         .foregroundColor(banner.color)
-                    VStack(alignment: .leading, spacing: 1) {
+                    VStack(alignment: .leading, spacing: .spacing.hairline) {
                         Text(banner.title)
                             .font(.system(size: .fontSize.xsmall, weight: .bold))
                             .foregroundColor(.ecoSmoke)
                         Text(banner.message)
-                            .font(.system(size: 11))
-                            .foregroundColor(.ecoSmoke.opacity(0.82))
+                            .font(.system(size: .fontSize.caption))
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textStrong))
                             .lineLimit(1)
                     }
                     Spacer()
                 }
                 .padding(.horizontal, .spacing.x4)
                 .padding(.vertical, .spacing.x3)
-                .frame(maxWidth: 420)
+                .frame(maxWidth: .maxWidth.scannerBanner)
                 .background(
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(Color.black.opacity(0.78))
+                    RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                        .fill(Color.black.opacity(Double.opacity.textSecondary))
                         .overlay(
-                            RoundedRectangle(cornerRadius: 14)
-                                .stroke(Color.surfaceStroke, lineWidth: 1)
+                            RoundedRectangle(cornerRadius: .borderRadius.mediumPlus)
+                                .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
                         )
                 )
                 .transition(.move(edge: .top).combined(with: .opacity))
@@ -196,25 +196,25 @@ private extension ScannerView {
                 .font(.system(size: .fontSize.medium))
                 .foregroundColor(.ecoLight)
 
-            VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: .spacing.none) {
                 Text(profileManager.profile.currentLevel.displayName)
                     .font(.system(size: .fontSize.xsmall, weight: .bold))
                     .foregroundColor(.white)
 
                 Text("common.xp_total".localized(with: profileManager.profile.totalXP))
-                    .font(.system(size: 10))
-                    .foregroundColor(.white.opacity(0.78))
+                    .font(.system(size: .fontSize.tiny))
+                    .foregroundColor(.white.opacity(Double.opacity.textSecondary))
             }
         }
         .padding(.horizontal, .spacing.x4)
         .padding(.vertical, .spacing.x2)
-        .scannerCapsuleRegularGlass()
+        .scannerCapsuleClearInteractiveGlass()
     }
 
     var streakCapsule: some View {
         HStack(spacing: .spacing.base) {
             Image(systemName: "flame.fill")
-                .font(.system(size: 14))
+                .font(.system(size: .fontSize.small))
                 .foregroundColor(.streakOrange)
             Text("\(profileManager.profile.currentStreak)")
                 .font(.system(size: .fontSize.xsmall, weight: .bold))
@@ -222,7 +222,7 @@ private extension ScannerView {
         }
         .padding(.horizontal, .spacing.x3)
         .padding(.vertical, .spacing.x2)
-        .scannerCapsuleRegularGlass()
+        .scannerCapsuleClearInteractiveGlass()
     }
 
     var debugBoxToggleButton: some View {
@@ -231,11 +231,11 @@ private extension ScannerView {
         } label: {
             HStack(spacing: .spacing.base) {
                 Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: .fontSize.smallPlus, weight: .semibold))
                 Text("BOX")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: .fontSize.tiny, weight: .bold))
             }
-            .foregroundColor(debugBoundingBoxEnabled ? .ecoLight : .white.opacity(0.7))
+            .foregroundColor(debugBoundingBoxEnabled ? .ecoPrimary : .white.opacity(Double.opacity.controlDisabled))
             .padding(.horizontal, .spacing.x3)
             .padding(.vertical, .spacing.x2)
             .scannerCapsuleClearInteractiveGlass()
@@ -246,7 +246,7 @@ private extension ScannerView {
 
     var scannerGuide: some View {
         ScannerGuideView(isActive: wasteDetector.currentDetection != nil)
-            .frame(width: 248, height: 248)
+            .frame(width: .size.scannerGuideFrame, height: .size.scannerGuideFrame)
             .padding(.horizontal, .spacing.x6)
             .allowsHitTesting(false)
     }
@@ -254,10 +254,10 @@ private extension ScannerView {
     func detectionLabel(for detection: WasteDetectionResult) -> some View {
         HStack(spacing: .spacing.x3) {
             Image(systemName: detection.category.systemImage)
-                .font(.system(size: 24))
+                .font(.system(size: .iconSize.large))
                 .foregroundColor(detection.category.color)
 
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text(detection.category.displayName)
                     .font(.system(size: .fontSize.large, weight: .bold))
                     .foregroundColor(detection.category.color)
@@ -276,7 +276,7 @@ private extension ScannerView {
     var scanHint: some View {
         HStack(spacing: .spacing.x2) {
             Image(systemName: "viewfinder")
-                .font(.system(size: 14))
+                .font(.system(size: .fontSize.small))
             Text("scanner.hint".localized)
                 .font(.system(size: .fontSize.small))
         }
@@ -302,18 +302,18 @@ private extension ScannerView {
                             endPoint: .bottomTrailing
                         )
                         : LinearGradient(
-                            colors: [.white.opacity(0.45), .white.opacity(0.28)],
+                            colors: [.white.opacity(Double.opacity.disabled), .white.opacity(Double.opacity.overlayStrong)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ),
-                        lineWidth: 4
+                        lineWidth: .lineWidth.strong
                     )
-                    .frame(width: 84, height: 84)
-                    .scaleEffect(scanPulse ? 1.12 : 1.0)
+                    .frame(width: .size.scannerButtonOuter, height: .size.scannerButtonOuter)
+                    .scaleEffect(scanPulse ? .scale.pulse : .scale.normal)
                     .animation(
                         hasDetection
-                        ? .easeInOut(duration: 1.15).repeatForever(autoreverses: true)
-                        : .easeOut(duration: 0.18),
+                        ? .easeInOut(duration: Double.duration.scannerPulse).repeatForever(autoreverses: true)
+                        : .easeOut(duration: Double.duration.quick),
                         value: scanPulse
                     )
 
@@ -326,20 +326,20 @@ private extension ScannerView {
                             endPoint: .bottomTrailing
                         )
                         : LinearGradient(
-                            colors: [.white.opacity(0.28), .white.opacity(0.18)],
+                            colors: [.white.opacity(Double.opacity.overlayStrong), .white.opacity(Double.opacity.strokeSoft)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
-                    .frame(width: 66, height: 66)
+                    .frame(width: .size.scannerButtonInner, height: .size.scannerButtonInner)
 
                 Image(systemName: "viewfinder")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(.white.opacity(hasDetection ? 1.0 : 0.65))
+                    .font(.system(size: .iconSize.xlarge, weight: .medium))
+                    .foregroundColor(.white.opacity(hasDetection ? Double.opacity.opaque : Double.opacity.iconInactive))
             }
         }
         .disabled(!hasDetection)
-        .opacity(hasDetection ? 1.0 : 0.45)
+        .opacity(hasDetection ? Double.opacity.opaque : Double.opacity.disabled)
         .buttonStyle(.plain)
     }
 }
@@ -367,7 +367,7 @@ private extension ScannerView {
         impact.impactOccurred()
         #endif
 
-        withAnimation(.spring(response: 0.4, dampingFraction: 0.82)) {
+        withAnimation(.spring(response: Double.duration.feedback, dampingFraction: Double.damping.responsive)) {
             showFeedback = true
         }
 
@@ -411,12 +411,12 @@ private extension ScannerView {
 
     func enqueueBanner(title: String, message: String, icon: String, color: Color) {
         let banner = ScannerBanner(title: title, message: message, icon: icon, color: color)
-        withAnimation(.spring(response: 0.35, dampingFraction: 0.86)) {
+        withAnimation(.spring(response: Double.duration.medium, dampingFraction: Double.damping.snappy)) {
             notifications.append(banner)
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) {
-            withAnimation(.easeInOut(duration: 0.2)) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + Double.duration.notificationLifetime) {
+            withAnimation(.easeInOut(duration: Double.duration.fast)) {
                 notifications.removeAll { $0.id == banner.id }
             }
         }

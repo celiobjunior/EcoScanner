@@ -14,13 +14,23 @@ extension Color {
     static let textPrimary   = Color(.label)
     static let textSecondary = Color(.secondaryLabel)
     static let cardBackground = Color(.secondarySystemBackground)
-    static let surfaceGlass = Color.white.opacity(0.12)
-    static let surfaceStroke = Color.white.opacity(0.25)
+    static let surfaceGlass = Color.white.opacity(Double.opacity.glass)
+    static let surfaceStroke = Color.white.opacity(Double.opacity.glow)
 
     // Accents
     static let xpGold       = Color(hex: 0xFFB800)
     static let streakOrange = Color(hex: 0xFF6B35)
     static let achievementLocked = Color(hex: 0xC86C66)
+
+    // Waste categories
+    static let wastePlastic = Color(hex: 0xFFD700)
+    static let wasteGlass = Color(hex: 0x2ECC71)
+    static let wasteMetal = Color(hex: 0x95A5A6)
+    static let wastePaper = Color(hex: 0x3498DB)
+    static let wasteCardboard = Color(hex: 0xD4A574)
+    static let wasteElectronic = Color(hex: 0xE74C3C)
+    static let wasteBiodegradable = Color(hex: 0x27AE60)
+    static let wasteTextile = Color(hex: 0x9B59B6)
 
     // Gradients
     static let ecoGradientStart = Color(hex: 0x92C730)

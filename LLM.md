@@ -1,6 +1,6 @@
 # LLM.md - EcoScanner Project Context (Current)
 
-Last updated: 2026-02-15
+Last updated: 2026-02-17
 
 ## Project Overview
 
@@ -281,3 +281,32 @@ Major changes that required this document update:
 ## Maintenance Rule
 
 Whenever gameplay rules, ML labels/mapping, platform target, or feature module structure changes, update this file in the same pull request so LLM context stays accurate.
+
+## LLM Token Usage Directive (Mandatory)
+
+When editing UI/UX code in this project, LLM agents must always prefer design tokens over hardcoded visual values.
+
+### Required Rules
+
+1. Do not introduce raw visual constants in feature views for:
+   - spacing/padding/margins
+   - font sizes
+   - corner radius
+   - line width/stroke
+   - opacity/alpha
+   - icon/view sizes
+   - max widths/layout constraints
+   - animation durations/damping/scale
+   - shadows/blur
+2. Use tokens from:
+   - `Core/DesignSystem/DesignTokens.swift`
+   - `Core/DesignSystem/Color+EcoScanner.swift`
+3. If a needed token does not exist:
+   - create a token in the correct category instead of hardcoding in a feature file;
+   - keep the current naming/grouping style (`spacing`, `fontSize`, `borderRadius`, `lineWidth`, `iconSize`, `size`, `maxWidth`, `opacity`, `duration`, etc.).
+4. Waste/material category colors must stay centralized in `Color+EcoScanner.swift` and be consumed through `WasteCategory.color` (no duplicated hex values in feature files).
+5. Literal numbers are allowed only for business/domain constants (for example XP thresholds, CO2 factors, or model confidence gates), not for visual styling.
+
+### Enforcement Hint
+
+Before finalizing edits, run a quick search for visual hardcodes (examples: `cornerRadius: 16`, `opacity(0.8)`, `.font(.system(size: 24))`) and migrate them to tokens.
