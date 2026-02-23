@@ -9,6 +9,8 @@ extension Color {
     static let ecoDark    = Color(hex: 0x37A146)
     static let ecoInk     = Color(hex: 0x0E1618)
     static let ecoSmoke   = Color(hex: 0xF6F6F6)
+    static let ecoSeaDeep = Color(hex: 0x156534)
+    static let ecoSeaShore = Color(hex: 0x64A30E)
 
     // Semantic
     static let textPrimary   = Color(.label)

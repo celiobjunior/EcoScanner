@@ -156,9 +156,6 @@ private extension CameraManager {
         captureSession.addOutput(captureOutput)
 
         if let connection = captureOutput.connection(with: .video) {
-            if connection.isVideoOrientationSupported {
-                connection.videoOrientation = .portrait
-            }
             if connection.isVideoMirroringSupported {
                 connection.automaticallyAdjustsVideoMirroring = false
                 connection.isVideoMirrored = (currentCamera == .front)

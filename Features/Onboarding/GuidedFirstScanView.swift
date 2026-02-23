@@ -28,7 +28,7 @@ private struct GuidedCompletionView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.ecoInk.ignoresSafeArea()
 
             VStack(spacing: .spacing.x5) {
                 Image(systemName: "checkmark.seal.fill")

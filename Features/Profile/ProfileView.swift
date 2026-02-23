@@ -47,7 +47,7 @@ private extension ProfileView {
     var profileHeader: some View {
         VStack(spacing: .spacing.x5) {
             VStack(spacing: .spacing.x3) {
-                Image("EcoScannerLogoNoBg")
+                Image("Leaf2")
                     .resizable()
                     .scaledToFit()
                     .frame(width: .size.profileHeaderLogo, height: .size.profileHeaderLogo)

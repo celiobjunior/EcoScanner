@@ -42,6 +42,17 @@ let package = Package(
         .executableTarget(
             name: "AppModule",
             path: ".",
+            exclude: [
+                "LLM.md",
+                "liquidglass.md"
+            ],
+            sources: [
+                "MyApp.swift",
+                "Core",
+                "Domain",
+                "Features",
+                "Services"
+            ],
             resources: [
                 .process("Resources/Data/MaterialFacts.json"),
                 .copy("Resources/MLModel/EcoScanner.mlmodelc")
