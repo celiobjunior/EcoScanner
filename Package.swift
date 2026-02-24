@@ -42,10 +42,7 @@ let package = Package(
         .executableTarget(
             name: "AppModule",
             path: ".",
-            exclude: [
-                "LLM.md",
-                "liquidglass.md"
-            ],
+            exclude: [],
             sources: [
                 "MyApp.swift",
                 "Core",
