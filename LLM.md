@@ -49,6 +49,12 @@ Main UI
        - HelpTutorialView
        - CreditsView
 
+Onboarding files:
+  - OnboardingView.swift (main flow)
+  - OnboardingPage.swift (model + static pages factory)
+  - OnboardingCard.swift (card model)
+  - GuidedFirstScanView.swift
+
 Layers
   Core/
     - DesignSystem (colors, spacing, typography tokens)
@@ -73,16 +79,26 @@ Layers
 AVCaptureSession frames
   -> ScannerAVCaptureView.Coordinator.captureOutput(...)
   -> WasteDetector.onImageReceived(buffer:) (~5 FPS)
-  -> VNCoreMLRequest
-  -> top recognized object (confidence >= 0.50)
+  -> VNCoreMLRequest (imageCropAndScaleOption: .scaleFill)
+  -> multi-candidate scoring: 55% confidence + 15% area + 30% center proximity
+  -> ROI: central 60% soft region (scoring weight, not hard filter)
   -> label mapping to WasteCategory
+  -> focus lock: once a category gets 3 consistent hits, lock onto it
+     - same-category updates allowed if IoU >= 0.30
+     - different category breaks lock only if score margin > 0.20
+     - lock auto-expires after 1.5s of no matching candidate
   -> confidence smoothing:
-     - new display requires confidence >= 0.58 and 2 consistent hits
+     - new display requires confidence >= 0.58 and 3 consistent hits
      - displayed result is kept while confidence >= 0.50
-     - clear after 3 missed frames
+     - bounding box smoothed with alpha=0.25 (reset if IoU < 0.25)
+     - clear after 5 missed frames
   -> @Published currentDetection
   -> ScannerView detection card + enabled scan button
 ```
+
+**BOX toggle**: `debugBoundingBoxEnabled` is stored in `@AppStorage` by `ScannerView` and passed to `ScannerAVCaptureView` as a plain `Bool` prop (not `@AppStorage` in the `UIViewRepresentable` — that pattern fails because SwiftUI doesn't observe it as a view dependency). Toggling shows a restart alert since the camera layer needs reinitialization.
+
+**Accent color**: Set in `Package.swift` as `.presetColor(.green)` to ensure NavigationSplitView selection highlight and all interactive elements use green instead of system blue.
 
 ### 2) Collection Pipeline
 
@@ -117,6 +133,20 @@ Launch
 - `ProfileView`: level progress, CO2 card, stats grid, adaptive achievements grid, level detail sheet, achievement detail sheet with progress bars.
 - `HelpTutorialView`: practical recap + button to restart onboarding and guided first scan.
 - `CreditsView`: datasets, repository, and social links.
+
+### 5) Glass Effect Scope
+
+Glass effects (`.glassEffect(.clear, ...)` and `GlassEffectContainer`) are used **only** in:
+- `OnboardingView` — cards and category section
+- `ScannerView` — interactive capsule buttons (`.scannerCapsuleClearInteractiveGlass()`)
+
+All other views (Profile, History, Help, Credits) use manual `RoundedRectangle` backgrounds with `Color.white.opacity(0.06)` fill and `Color.surfaceStroke` border.
+
+Modals (Levels sheet, Achievement popover) retain close buttons, `NavigationStack`, and dark toolbar with `Color.ecoInk` background.
+
+### 6) Sidebar
+
+`MainTabView` uses `.tint(.ecoPrimary)` on the sidebar `List` to ensure selected tab highlight matches the app's green accent color.
 
 ## Gamification (Current Rules)
 

@@ -28,12 +28,12 @@ private struct GuidedCompletionView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.ecoInk.ignoresSafeArea()
 
             VStack(spacing: .spacing.x5) {
                 Image(systemName: "checkmark.seal.fill")
                     .font(.system(size: .iconSize.mega, weight: .bold))
-                    .foregroundColor(.ecoPrimary)
+                    .foregroundColor(.ecoLight)
 
                 Text("guided.completion.title".localized)
                     .font(.system(size: .fontSize.big, weight: .bold))
@@ -52,7 +52,7 @@ private struct GuidedCompletionView: View {
                 } label: {
                     Text("guided.completion.button".localized)
                         .font(.system(size: .fontSize.medium, weight: .bold))
-                        .foregroundColor(.black)
+                        .foregroundColor(.ecoInk)
                         .padding(.vertical, .spacing.x3)
                         .padding(.horizontal, .spacing.x8)
                         .background(Capsule().fill(Color.ecoSmoke))

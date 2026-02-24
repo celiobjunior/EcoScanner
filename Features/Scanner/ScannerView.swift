@@ -32,7 +32,7 @@ struct ScannerView: View {
 
     var body: some View {
         ZStack {
-            ScannerAVCaptureView()
+            ScannerAVCaptureView(debugBoundingBoxEnabled: debugBoundingBoxEnabled)
                 .ignoresSafeArea()
 
             VStack {
@@ -165,15 +165,16 @@ private extension ScannerView {
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.top, .spacing.x12)
+        .allowsHitTesting(false)
     }
 
     var topBar: some View {
         HStack {
             statusInfoContainer
-
             Spacer()
-
-            debugBoxToggleButton
+            if profileManager.profile.currentStreak > 0 {
+                streakCapsule
+            }
         }
         .padding(.horizontal, .spacing.x6)
         .padding(.top, .spacing.x4)
@@ -181,12 +182,7 @@ private extension ScannerView {
 
     var statusInfoContainer: some View {
         GlassEffectContainer(spacing: .spacing.x2) {
-            HStack(spacing: .spacing.x2) {
-                levelCapsule
-                if profileManager.profile.currentStreak > 0 {
-                    streakCapsule
-                }
-            }
+            levelCapsule
         }
     }
 
@@ -223,25 +219,6 @@ private extension ScannerView {
         .padding(.horizontal, .spacing.x3)
         .padding(.vertical, .spacing.x2)
         .scannerCapsuleClearInteractiveGlass()
-    }
-
-    var debugBoxToggleButton: some View {
-        Button {
-            debugBoundingBoxEnabled.toggle()
-        } label: {
-            HStack(spacing: .spacing.base) {
-                Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
-                    .font(.system(size: .fontSize.smallPlus, weight: .semibold))
-                Text("BOX")
-                    .font(.system(size: .fontSize.tiny, weight: .bold))
-            }
-            .foregroundColor(debugBoundingBoxEnabled ? .ecoPrimary : .white.opacity(Double.opacity.controlDisabled))
-            .padding(.horizontal, .spacing.x3)
-            .padding(.vertical, .spacing.x2)
-            .scannerCapsuleClearInteractiveGlass()
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Toggle detection debug box")
     }
 
     var scannerGuide: some View {

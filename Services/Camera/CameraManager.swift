@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import SwiftUI
 
 // MARK: - CameraError
@@ -19,6 +19,10 @@ enum CameraError: Error {
         case .unknownAuthorization:    return "camera.error.unknown_authorization".localized
         }
     }
+}
+
+private struct CaptureSessionRef: @unchecked Sendable {
+    let session: AVCaptureSession
 }
 
 // MARK: - CameraManager
@@ -66,9 +70,10 @@ class CameraManager: ObservableObject {
     func startCapture() async {
         guard setupStatus == .success, runStatus == .stopped else { return }
         runStatus = .loading
+        let sessionRef = CaptureSessionRef(session: captureSession)
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            sessionQueue.async { [captureSession] in
-                captureSession.startRunning()
+            sessionQueue.async {
+                sessionRef.session.startRunning()
                 continuation.resume()
             }
         }
@@ -78,9 +83,10 @@ class CameraManager: ObservableObject {
     func stopCapture() async {
         guard setupStatus == .success, runStatus == .running else { return }
         runStatus = .loading
+        let sessionRef = CaptureSessionRef(session: captureSession)
         await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            sessionQueue.async { [captureSession] in
-                captureSession.stopRunning()
+            sessionQueue.async {
+                sessionRef.session.stopRunning()
                 continuation.resume()
             }
         }
@@ -150,9 +156,6 @@ private extension CameraManager {
         captureSession.addOutput(captureOutput)
 
         if let connection = captureOutput.connection(with: .video) {
-            if connection.isVideoOrientationSupported {
-                connection.videoOrientation = .portrait
-            }
             if connection.isVideoMirroringSupported {
                 connection.automaticallyAdjustsVideoMirroring = false
                 connection.isVideoMirrored = (currentCamera == .front)

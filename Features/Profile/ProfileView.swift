@@ -47,14 +47,10 @@ private extension ProfileView {
     var profileHeader: some View {
         VStack(spacing: .spacing.x5) {
             VStack(spacing: .spacing.x3) {
-                Image(systemName: profileManager.profile.currentLevel.systemImage)
-                    .font(.system(size: .iconSize.display, weight: .light))
-                    .foregroundStyle(
-                        LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                Text(profileManager.profile.name)
-                    .font(.system(size: .fontSize.large, weight: .bold))
-                    .foregroundColor(.ecoSmoke)
+                Image("Leaf2")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: .size.profileHeaderLogo, height: .size.profileHeaderLogo)
             }
 
             VStack(spacing: .spacing.x2) {
@@ -67,7 +63,7 @@ private extension ProfileView {
                     showLevelsSheet = true
                 }
                 .font(.system(size: .fontSize.xsmall, weight: .semibold))
-                .foregroundColor(.ecoLight)
+                .foregroundColor(.xpGold)
             }
 
             VStack(spacing: .spacing.base) {
@@ -208,18 +204,26 @@ private extension ProfileView {
 private extension ProfileView {
 
     var carbonFootprintCard: some View {
-        HStack(spacing: .spacing.x5) {
-            ZStack {
-                Circle()
-                    .fill(LinearGradient(colors: [.ecoLight.opacity(Double.opacity.gradientSoft), .ecoPrimary.opacity(Double.opacity.gradientSoft)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: .size.carbonCardIcon, height: .size.carbonCardIcon)
-                Image(systemName: "leaf.fill").font(.system(size: .iconSize.large)).foregroundColor(.ecoPrimary)
-            }
+        let co2Text = String(format: "profile.co2_format".localized, profileManager.profile.totalCO2Saved)
+
+        return HStack(spacing: .spacing.x5) {
+            Image("Carbon")
+                .resizable()
+                .scaledToFit()
+                .frame(width: .size.carbonCardIcon, height: .size.carbonCardIcon)
             VStack(alignment: .leading, spacing: .spacing.base) {
                 Text("profile.carbon_footprint".localized)
                     .font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textMuted))
-                Text(String(format: "profile.co2_format".localized, profileManager.profile.totalCO2Saved))
-                    .font(.system(size: .fontSize.big, weight: .bold)).foregroundColor(.ecoPrimary)
+                Text(co2Text)
+                    .font(.system(size: .fontSize.big, weight: .bold))
+                    .foregroundColor(.clear)
+                    .overlay(
+                        LinearGradient(colors: [.ecoLight, .ecoPrimary], startPoint: .leading, endPoint: .trailing)
+                            .mask(
+                                Text(co2Text)
+                                    .font(.system(size: .fontSize.big, weight: .bold))
+                            )
+                    )
                 Text("profile.co2_subtitle".localized)
                     .font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textMuted))
             }
@@ -238,23 +242,36 @@ private extension ProfileView {
 
     var stats: [(String, String, String)] {
         [
-            ("shippingbox.fill", "\(profileManager.profile.totalCollections)", "profile.items_collected".localized),
-            ("flame.fill", "\(profileManager.profile.currentStreak)", "profile.streak_days".localized),
-            ("star.fill", "\(profileManager.profile.totalXP)", "profile.total_xp".localized),
-            ("medal.fill", "\(profileManager.profile.unlockedAchievementIDs.count)", "profile.achievements_label".localized),
+            ("Items", "\(profileManager.profile.totalCollections)", "profile.items_collected".localized),
+            ("Streak", "\(profileManager.profile.currentStreak)", "profile.streak_days".localized),
+            ("XP", "\(profileManager.profile.totalXP)", "profile.total_xp".localized),
+            ("Awards", "\(profileManager.profile.unlockedAchievementIDs.count)", "profile.achievements_label".localized),
         ]
     }
 
     var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: .spacing.x4) {
-            ForEach(stats, id: \.2) { iconName, value, label in
-                VStack(spacing: .spacing.x2) {
-                    Image(systemName: iconName).font(.system(size: .iconSize.large)).foregroundColor(.ecoPrimary)
-                    Text(value).font(.system(size: .fontSize.large, weight: .bold)).foregroundColor(.ecoSmoke)
-                    Text(label).font(.system(size: .fontSize.xsmall)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textMuted))
+            ForEach(stats, id: \.2) { assetName, value, label in
+                HStack(spacing: .spacing.x3) {
+                    Image(assetName)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: .size.carbonCardIcon, height: .size.carbonCardIcon)
+
+                    VStack(alignment: .leading, spacing: .spacing.base) {
+                        Text(value)
+                            .font(.system(size: .fontSize.large, weight: .bold))
+                            .foregroundColor(.ecoSmoke)
+                        Text(label)
+                            .font(.system(size: .fontSize.xsmall))
+                            .foregroundColor(.ecoSmoke.opacity(Double.opacity.textMuted))
+                    }
+
+                    Spacer(minLength: 0)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, .spacing.x5)
+                .padding(.vertical, .spacing.x4)
+                .padding(.horizontal, .spacing.x4)
                 .background(
                     RoundedRectangle(cornerRadius: .borderRadius.large)
                         .fill(Color.white.opacity(Double.opacity.surfaceSubtle))

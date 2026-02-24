@@ -8,8 +8,7 @@ struct HelpTutorialView: View {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("hasCompletedFirstGuidedScan") private var hasCompletedFirstGuidedScan = true
-
-    @State private var showCredits = false
+    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
 
     var body: some View {
         NavigationStack {
@@ -41,7 +40,9 @@ struct HelpTutorialView: View {
                             body: "help.card.categories.body".localized
                         )
 
-                        actionButtons
+                        onboardingResetSection
+
+                        boxToggleSection
                     }
                     .padding(.horizontal, .spacing.x6)
                     .padding(.vertical, .spacing.x6)
@@ -61,9 +62,6 @@ struct HelpTutorialView: View {
                     }
                     .foregroundColor(.ecoLight)
                 }
-            }
-            .sheet(isPresented: $showCredits) {
-                CreditsView()
             }
         }
     }
@@ -104,25 +102,59 @@ private extension HelpTutorialView {
         )
     }
 
-    var actionButtons: some View {
+    var boxToggleSection: some View {
         VStack(alignment: .leading, spacing: .spacing.x3) {
+            Text("help.box.title".localized)
+                .font(.system(size: .fontSize.medium, weight: .bold))
+                .foregroundColor(.ecoSmoke)
+
+            Text("help.box.body".localized)
+                .font(.system(size: .fontSize.small))
+                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textBody))
+                .lineSpacing(.lineSpacing.compact)
+
             Button {
-                showCredits = true
+                debugBoundingBoxEnabled.toggle()
             } label: {
                 HStack(spacing: .spacing.x2) {
-                    Image(systemName: "heart.text.square.fill")
-                    Text("help.open_credits".localized)
+                    Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
+                        .font(.system(size: .fontSize.smallPlus, weight: .semibold))
+                    Text(debugBoundingBoxEnabled ? "help.box.disable".localized : "help.box.enable".localized)
                         .font(.system(size: .fontSize.small, weight: .bold))
                     Spacer(minLength: 0)
-                    Image(systemName: "arrow.up.right.square")
+                    Text(debugBoundingBoxEnabled ? "help.box.status.on".localized : "help.box.status.off".localized)
+                        .font(.system(size: .fontSize.xsmall, weight: .bold))
                 }
-                .foregroundColor(.black)
+                .foregroundColor(debugBoundingBoxEnabled ? .ecoPrimary : .ecoSmoke)
                 .padding(.vertical, .spacing.x3)
                 .padding(.horizontal, .spacing.x4)
-                .background(Capsule().fill(Color.white))
+                .background(
+                    Capsule()
+                        .fill(debugBoundingBoxEnabled ? Color.ecoPrimary.opacity(Double.opacity.overlaySoft) : Color.white.opacity(Double.opacity.surfaceSubtle))
+                        .overlay(
+                            Capsule()
+                                .stroke(
+                                    debugBoundingBoxEnabled ? Color.ecoPrimary.opacity(Double.opacity.accentStroke) : Color.white.opacity(Double.opacity.strokeSoft),
+                                    lineWidth: .lineWidth.hairline
+                                )
+                        )
+                )
             }
             .buttonStyle(.plain)
+        }
+        .padding(.spacing.x4)
+        .background(
+            RoundedRectangle(cornerRadius: .borderRadius.large)
+                .fill(Color.white.opacity(Double.opacity.surfaceSubtle))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.large)
+                        .stroke(Color.surfaceStroke, lineWidth: .lineWidth.hairline)
+                )
+        )
+    }
 
+    var onboardingResetSection: some View {
+        VStack(alignment: .leading, spacing: .spacing.x3) {
             Button {
                 hasCompletedFirstGuidedScan = false
                 hasCompletedOnboarding = false

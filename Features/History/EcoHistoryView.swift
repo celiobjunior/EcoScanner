@@ -7,12 +7,25 @@ struct EcoHistoryView: View {
     @EnvironmentObject var profileManager: UserProfileManager
     @State private var selectedFilter: WasteCategory? = nil
 
+    private var allEntries: [CollectionEntry] {
+        profileManager.fetchHistory()
+    }
+
     private var entries: [CollectionEntry] {
-        let all = profileManager.fetchHistory()
         if let filter = selectedFilter {
-            return all.filter { $0.categoryRawValue == filter.rawValue }
+            return allEntries.filter { $0.categoryRawValue == filter.rawValue }
         }
-        return all
+        return allEntries
+    }
+
+    private var filterCategories: [WasteCategory] {
+        let modelSupported = WasteCategory.modelSupportedCases
+        let legacyUsed = allEntries.reduce(into: [WasteCategory]()) { acc, entry in
+            guard let category = entry.category else { return }
+            guard !modelSupported.contains(category), !acc.contains(category) else { return }
+            acc.append(category)
+        }
+        return modelSupported + legacyUsed
     }
 
     var body: some View {
@@ -68,7 +81,7 @@ private extension EcoHistoryView {
                 FilterChip(label: "history.all_filter".localized, systemImage: "list.bullet", isSelected: selectedFilter == nil, color: .ecoPrimary) {
                     withAnimation(.spring(response: Double.duration.regular)) { selectedFilter = nil }
                 }
-                ForEach(WasteCategory.allCases) { category in
+                ForEach(filterCategories) { category in
                     FilterChip(label: category.displayName, systemImage: category.systemImage, isSelected: selectedFilter == category, color: category.color) {
                         withAnimation(.spring(response: Double.duration.regular)) { selectedFilter = selectedFilter == category ? nil : category }
                     }

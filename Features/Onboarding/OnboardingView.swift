@@ -6,23 +6,13 @@ struct OnboardingView: View {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     @State private var currentPage = 0
-    @State private var gradientAngle: Double = 0
 
     private let pages = OnboardingPage.pages
 
     var body: some View {
         ZStack {
-            AngularGradient(
-                colors: [.ecoDark, .ecoPrimary, .ecoLight, .ecoPrimary, .ecoDark],
-                center: .center,
-                angle: .degrees(gradientAngle)
-            )
-            .ignoresSafeArea()
-            .onAppear {
-                withAnimation(.linear(duration: Double.duration.onboardingGradient).repeatForever(autoreverses: false)) {
-                    gradientAngle = 360
-                }
-            }
+            movingOceanGradient
+                .ignoresSafeArea()
 
             TabView(selection: $currentPage) {
                 ForEach(Array(pages.enumerated()), id: \.offset) { index, page in
@@ -44,6 +34,59 @@ struct OnboardingView: View {
 // MARK: - UI
 
 private extension OnboardingView {
+
+    var movingOceanGradient: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
+            let time = context.date.timeIntervalSinceReferenceDate
+            let wave = time * 0.28
+
+            ZStack {
+                LinearGradient(
+                    stops: [
+                        .init(color: .ecoSeaDeep, location: 0.0),
+                        .init(color: .ecoSeaDeep.opacity(Double.opacity.nearOpaque), location: 0.38),
+                        .init(color: .ecoSeaShore.opacity(Double.opacity.textEmphasis), location: 0.82),
+                        .init(color: .ecoLight.opacity(Double.opacity.textLow), location: 1.0),
+                    ],
+                    startPoint: UnitPoint(
+                        x: 0.18 + (0.09 * sin(wave * 0.55)),
+                        y: 0.02 + (0.05 * cos(wave * 0.38))
+                    ),
+                    endPoint: UnitPoint(
+                        x: 0.82 + (0.09 * cos(wave * 0.47)),
+                        y: 0.98 + (0.05 * sin(wave * 0.43))
+                    )
+                )
+
+                RadialGradient(
+                    colors: [
+                        Color.ecoLight.opacity(Double.opacity.strokeSoft),
+                        .clear,
+                    ],
+                    center: UnitPoint(
+                        x: 0.18 + (0.2 * sin(wave * 0.75)),
+                        y: 0.22 + (0.12 * cos(wave * 0.52))
+                    ),
+                    startRadius: 8,
+                    endRadius: 460
+                )
+
+                RadialGradient(
+                    colors: [
+                        Color.ecoSeaShore.opacity(Double.opacity.surfaceMuted),
+                        Color.ecoSeaDeep.opacity(Double.opacity.surfaceSubtle),
+                        .clear,
+                    ],
+                    center: UnitPoint(
+                        x: 0.82 + (0.18 * cos(wave * 0.61)),
+                        y: 0.82 + (0.14 * sin(wave * 0.49))
+                    ),
+                    startRadius: 6,
+                    endRadius: 520
+                )
+            }
+        }
+    }
 
     func pageView(_ page: OnboardingPage, isFirst: Bool) -> some View {
         ScrollView(showsIndicators: false) {
@@ -95,7 +138,7 @@ private extension OnboardingView {
     @ViewBuilder
     func heroView(isFirst: Bool, systemImage: String) -> some View {
         if isFirst {
-            Image("EcoScannerLogoNoBg")
+            Image("EcoScannerLogoNoBg2")
                 .resizable()
                 .scaledToFit()
                 .frame(width: .size.onboardingHeroLogo, height: .size.onboardingHeroLogo)
@@ -161,7 +204,7 @@ private extension OnboardingView {
                 ],
                 spacing: .spacing.x2
             ) {
-                ForEach(WasteCategory.allCases) { category in
+                ForEach(WasteCategory.modelSupportedCases) { category in
                     categoryBadge(category)
                 }
             }
@@ -187,7 +230,11 @@ private extension OnboardingView {
         .padding(.horizontal, .spacing.x3)
         .background(
             RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
-                .fill(Color.white.opacity(Double.opacity.surfaceMuted))
+                .fill(category.color.opacity(Double.opacity.glow))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
+                        .stroke(category.color.opacity(Double.opacity.pageIndicator), lineWidth: .lineWidth.hairline)
+                )
         )
     }
 

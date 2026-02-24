@@ -30,16 +30,24 @@ class WasteDetector: ObservableObject {
     nonisolated private static let minCandidateArea: Double = 0.01
     nonisolated private static let areaNormalizationUpperBound: Double = 0.20
     nonisolated private static let smallBoxPenalty: Double = 0.55
-    nonisolated private static let scoreConfidenceWeight: Double = 0.65
-    nonisolated private static let scoreAreaWeight: Double = 0.20
-    nonisolated private static let scoreCenterWeight: Double = 0.15
-    nonisolated private static let minConsistentHitsToDisplay: Int = 2
-    nonisolated private static let clearAfterMissedFrames: Int = 3
+    nonisolated private static let scoreConfidenceWeight: Double = 0.55
+    nonisolated private static let scoreAreaWeight: Double = 0.15
+    nonisolated private static let scoreCenterWeight: Double = 0.30
+    nonisolated private static let minConsistentHitsToDisplay: Int = 3
+    nonisolated private static let clearAfterMissedFrames: Int = 5
     nonisolated private static let focusRegion = CGRect(x: 0.2, y: 0.2, width: 0.6, height: 0.6)
     nonisolated private static let maxFocusDistance = sqrt(0.5 * 0.5 + 0.5 * 0.5)
-    nonisolated private static let smoothingAlpha: CGFloat = 0.35
-    nonisolated private static let smoothingIoUResetThreshold: Double = 0.15
+    nonisolated private static let smoothingAlpha: CGFloat = 0.25
+    nonisolated private static let smoothingIoUResetThreshold: Double = 0.25
     nonisolated private static let debugCandidateLimit: Int = 5
+
+    // Focus lock: once a category is confirmed, hold focus on it
+    nonisolated private static let lockBreakScoreMargin: Double = 0.20
+    nonisolated private static let lockExpirationInterval: TimeInterval = 1.5
+    nonisolated private static let lockMinIoU: Double = 0.30
+    private var lockedCategory: WasteCategory? = nil
+    private var lockedBox: CGRect? = nil
+    private var lockTimestamp: Date? = nil
 }
 
 // MARK: - WasteDetectionResult
@@ -184,6 +192,12 @@ private extension WasteDetector {
             confidenceCandidate: output.confidenceCandidate
         )
 
+        // Check lock expiration
+        if let lockTime = lockTimestamp,
+           Date.now.timeIntervalSince(lockTime) > Self.lockExpirationInterval {
+            clearLock()
+        }
+
         guard let selectedCandidate = output.selectedCandidate else {
             pendingCategory = nil
             pendingCategoryHits = 0
@@ -193,10 +207,39 @@ private extension WasteDetector {
 
         let result = stabilizedResult(from: selectedCandidate.asResult())
 
+        // Focus lock: if locked, only accept same category with sufficient IoU
+        if let locked = lockedCategory, let lockedB = lockedBox {
+            if result.category == locked {
+                // Same category — update lock and detection
+                let iou = Self.intersectionOverUnion(lockedB, result.boundingBox.standardized)
+                if iou >= Self.lockMinIoU || currentDetection?.category == locked {
+                    missedDetectionFrames = 0
+                    currentDetection = result
+                    lockedBox = result.boundingBox.standardized
+                    lockTimestamp = .now
+                    pendingCategory = nil
+                    pendingCategoryHits = 0
+                    return
+                }
+            } else {
+                // Different category — only break lock if score is significantly higher
+                if let current = currentDetection,
+                   result.selectionScore > current.selectionScore + Self.lockBreakScoreMargin {
+                    clearLock()
+                    // Fall through to normal detection logic below
+                } else {
+                    // Reject — keep current lock
+                    return
+                }
+            }
+        }
+
+        // Standard detection logic (same as before)
         if let current = currentDetection, current.category == result.category {
             if result.confidence >= Self.keepDisplayConfidence {
                 missedDetectionFrames = 0
                 currentDetection = result
+                engageLock(category: result.category, box: result.boundingBox.standardized)
             } else {
                 registerMissedDetection()
             }
@@ -223,15 +266,29 @@ private extension WasteDetector {
 
         if pendingCategoryHits >= Self.minConsistentHitsToDisplay {
             currentDetection = result
+            engageLock(category: result.category, box: result.boundingBox.standardized)
             pendingCategory = nil
             pendingCategoryHits = 0
         }
+    }
+
+    func engageLock(category: WasteCategory, box: CGRect) {
+        lockedCategory = category
+        lockedBox = box
+        lockTimestamp = .now
+    }
+
+    func clearLock() {
+        lockedCategory = nil
+        lockedBox = nil
+        lockTimestamp = nil
     }
 
     func registerMissedDetection() {
         missedDetectionFrames += 1
         if missedDetectionFrames >= Self.clearAfterMissedFrames {
             currentDetection = nil
+            clearLock()
         }
     }
 
