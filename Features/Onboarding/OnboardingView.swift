@@ -38,14 +38,15 @@ private extension OnboardingView {
     var movingOceanGradient: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
             let time = context.date.timeIntervalSinceReferenceDate
-            let wave = time * 0.22
+            let wave = time * 0.28
 
             ZStack {
                 LinearGradient(
                     stops: [
                         .init(color: .ecoSeaDeep, location: 0.0),
-                        .init(color: .ecoSeaDeep.opacity(Double.opacity.nearOpaque), location: 0.42),
-                        .init(color: .ecoSeaShore.opacity(Double.opacity.textEmphasis), location: 1.0),
+                        .init(color: .ecoSeaDeep.opacity(Double.opacity.nearOpaque), location: 0.38),
+                        .init(color: .ecoSeaShore.opacity(Double.opacity.textEmphasis), location: 0.82),
+                        .init(color: .ecoLight.opacity(Double.opacity.textLow), location: 1.0),
                     ],
                     startPoint: UnitPoint(
                         x: 0.18 + (0.09 * sin(wave * 0.55)),
@@ -59,7 +60,7 @@ private extension OnboardingView {
 
                 RadialGradient(
                     colors: [
-                        Color.ecoSeaShore.opacity(Double.opacity.overlaySoft),
+                        Color.ecoLight.opacity(Double.opacity.strokeSoft),
                         .clear,
                     ],
                     center: UnitPoint(
@@ -72,7 +73,8 @@ private extension OnboardingView {
 
                 RadialGradient(
                     colors: [
-                        Color.ecoSeaDeep.opacity(Double.opacity.surfaceMuted),
+                        Color.ecoSeaShore.opacity(Double.opacity.surfaceMuted),
+                        Color.ecoSeaDeep.opacity(Double.opacity.surfaceSubtle),
                         .clear,
                     ],
                     center: UnitPoint(
@@ -202,7 +204,7 @@ private extension OnboardingView {
                 ],
                 spacing: .spacing.x2
             ) {
-                ForEach(WasteCategory.allCases) { category in
+                ForEach(WasteCategory.modelSupportedCases) { category in
                     categoryBadge(category)
                 }
             }
@@ -228,7 +230,11 @@ private extension OnboardingView {
         .padding(.horizontal, .spacing.x3)
         .background(
             RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
-                .fill(Color.white.opacity(Double.opacity.surfaceMuted))
+                .fill(category.color.opacity(Double.opacity.glow))
+                .overlay(
+                    RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
+                        .stroke(category.color.opacity(Double.opacity.pageIndicator), lineWidth: .lineWidth.hairline)
+                )
         )
     }
 
