@@ -1,6 +1,6 @@
 # LLM.md - EcoScanner Project Context (Current)
 
-Last updated: 2026-02-17
+Last updated: 2026-02-24
 
 ## Project Overview
 
@@ -13,7 +13,7 @@ It uses camera + CoreML detection/classification to identify recyclable material
 - Bundle ID: `com.devcelio.EcoScanner`
 - App category: Education
 - Main capability: Camera permission configured in `Package.swift`
-- Accent color config: system default (`accentColor: nil` in `Package.swift`)
+- Accent color config: asset-based (`accentColor: .asset("AccentColor")` in `Package.swift`)
 
 ## Model Experiments Summary
 
@@ -68,7 +68,7 @@ Layers
   Resources/
     - Data/MaterialFacts.json
     - MLModel/EcoScanner.mlmodelc
-    - Assets.xcassets (includes `TutorialImageEN`, `TutorialImagePT`)
+    - Assets.xcassets (includes `TutorialImageEN`, `TutorialImagePT`, `Carbon`, `Items`, `Streak`, `XP`, `Awards`, logo/leaf sets)
 ```
 
 ## Data and Feature Flows
@@ -98,7 +98,7 @@ AVCaptureSession frames
 
 **BOX toggle**: `debugBoundingBoxEnabled` is stored in `@AppStorage` by `ScannerView` and passed to `ScannerAVCaptureView` as a plain `Bool` prop (not `@AppStorage` in the `UIViewRepresentable` — that pattern fails because SwiftUI doesn't observe it as a view dependency). Toggling shows a restart alert since the camera layer needs reinitialization.
 
-**Accent color**: Set in `Package.swift` as `.presetColor(.green)` to ensure NavigationSplitView selection highlight and all interactive elements use green instead of system blue.
+**Accent color**: Set in `Package.swift` as `.asset("AccentColor")` and reinforced by `.tint(.ecoPrimary)` in navigation containers/components.
 
 ### 2) Collection Pipeline
 
@@ -130,6 +130,7 @@ Launch
 ### 4) History and Profile
 
 - `EcoHistoryView`: filter chips by category, summary header, list of all entries.
+  - Filter list prioritizes model-supported categories (`biodegradable`, `cardboard`, `glass`, `metal`, `paper`, `plastic`) and appends legacy categories only when found in saved history (`electronic`, `textile`).
 - `ProfileView`: level progress, CO2 card, stats grid, adaptive achievements grid, level detail sheet, achievement detail sheet with progress bars.
 - `HelpTutorialView`: practical recap + button to restart onboarding and guided first scan.
 - `CreditsView`: datasets, repository, and social links.
@@ -269,10 +270,24 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 # Open in Xcode / Swift Playgrounds-compatible environment
 open /Users/celio/Documents/untitled\ folder/EcoScanner.swiftpm
 
-# Optional size check
+# Optional size check (includes docs and git metadata)
 cd /tmp
 zip -qr EcoScanner.zip /Users/celio/Documents/untitled\ folder/EcoScanner.swiftpm
 ls -lh EcoScanner.zip
+
+# Clean Student Challenge package (no .git, no .md, no build/cache artifacts)
+cd /tmp
+rm -rf EcoScanner_Submission EcoScanner_Submission.zip
+rsync -a --delete \
+  --exclude='.git/' \
+  --exclude='.swiftpm/' \
+  --exclude='.build/' \
+  --exclude='**/*.md' \
+  --exclude='.DS_Store' \
+  "/Users/celio/Documents/untitled folder/EcoScanner.swiftpm/" \
+  EcoScanner_Submission/
+zip -qr EcoScanner_Submission.zip EcoScanner_Submission
+ls -lh EcoScanner_Submission.zip
 ```
 
 ## Student Challenge Fit (Current Status)
@@ -305,7 +320,7 @@ Major changes that required this document update:
 - Material facts file currently has 24 entries.
 - Localization content was expanded significantly.
 - Localization language resolution now prioritizes preferred system languages.
-- App accent color is now system default (`accentColor: nil`), and `AccentColor.colorset` is removed.
+- App accent color is asset-based (`accentColor: .asset("AccentColor")`) and `AccentColor.colorset` is present in assets.
 - `SupportingInfo.plist` is no longer a central config point for camera purpose; capability is declared in `Package.swift`.
 
 ## Maintenance Rule
