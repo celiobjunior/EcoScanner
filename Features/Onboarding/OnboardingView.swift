@@ -217,7 +217,7 @@ private extension OnboardingView {
         HStack(spacing: .spacing.x2) {
             Image(systemName: category.systemImage)
                 .font(.system(size: .fontSize.small, weight: .semibold))
-                .foregroundColor(category.color)
+                .foregroundColor(.white)
 
             Text(category.displayName)
                 .font(.system(size: .fontSize.small, weight: .semibold))

@@ -218,15 +218,12 @@ enum LocalizationStore {
         "help.card.howto.body": "1) Scan the object to identify its material. 2) Discard it in the correct stream. 3) Confirm and track your history.",
         "help.card.categories.title": "Scannable categories",
         "help.card.categories.body": "Plastic, glass, metal, paper, cardboard, electronic, biodegradable and textile.",
-        "help.box.title": "Detection Box (BOX)",
-        "help.box.body": "If you want a clearer view of what the model is seeing, enable the box option.",
-        "help.box.enable": "Enable BOX",
-        "help.box.disable": "Disable BOX",
-        "help.box.status.on": "ON",
-        "help.box.status.off": "OFF",
+
         "help.open_credits": "Open Credits & Dedications",
         "help.revisit_onboarding": "View Onboarding Again",
         "help.revisit_hint": "This will restart onboarding and the first guided scan.",
+        "help.autocapture.title": "Auto-capture",
+        "help.autocapture.body": "When enabled, the scanner automatically captures after 3 seconds of detecting the same material.",
 
         // Credits
         "credits.title": "Dedications & Credits",
@@ -255,10 +252,8 @@ enum LocalizationStore {
         "scanner.no_detection": "No material detected",
         "scanner.confidence": "%d%% confidence",
         "scanner.continue": "Continue Scanning",
-        "scanner.box_restart.title": "Restart Required",
-        "scanner.box_restart.message": "The bounding box setting requires an app restart to take effect.",
-        "scanner.box_restart.close": "Close App",
-        "scanner.box_restart.later": "Later",
+        "scanner.discard": "Discard\nthis scan",
+
         "home.title": "Recycle with purpose",
         "home.subtitle": "Detect materials in seconds and track your real environmental impact.",
         "home.scan_button": "Start Scanning",
@@ -494,15 +489,12 @@ enum LocalizationStore {
         "help.card.howto.body": "1) Escaneie o objeto para identificar o material. 2) Descarte no fluxo correto. 3) Confirme e acompanhe seu histórico.",
         "help.card.categories.title": "Categorias escaneáveis",
         "help.card.categories.body": "Plástico, vidro, metal, papel, papelão, eletrônico, biodegradável e têxtil.",
-        "help.box.title": "Caixa de Detecção (BOX)",
-        "help.box.body": "Caso queira ter uma visão mais certeira do que o modelo está vendo, ative a opção de box.",
-        "help.box.enable": "Ativar BOX",
-        "help.box.disable": "Desativar BOX",
-        "help.box.status.on": "LIGADO",
-        "help.box.status.off": "DESLIGADO",
+
         "help.open_credits": "Abrir Créditos e Dedicatórias",
         "help.revisit_onboarding": "Ver Onboarding Novamente",
         "help.revisit_hint": "Isso vai reiniciar o onboarding e o primeiro scan guiado.",
+        "help.autocapture.title": "Captura automática",
+        "help.autocapture.body": "Quando ativada, o scanner captura automaticamente após 3 segundos detectando o mesmo material.",
 
         // Créditos
         "credits.title": "Dedicatórias e Créditos",
@@ -531,10 +523,8 @@ enum LocalizationStore {
         "scanner.no_detection": "Nenhum material detectado",
         "scanner.confidence": "%d%% de confiança",
         "scanner.continue": "Continuar Escaneando",
-        "scanner.box_restart.title": "Reiniciar Necessário",
-        "scanner.box_restart.message": "A configuração da caixa de detecção requer reiniciar o app.",
-        "scanner.box_restart.close": "Fechar App",
-        "scanner.box_restart.later": "Depois",
+        "scanner.discard": "Descartar\neste scan",
+
         "home.title": "Recicle com propósito",
         "home.subtitle": "Detecte materiais em segundos e acompanhe seu impacto ambiental real.",
         "home.scan_button": "Iniciar Escaneamento",

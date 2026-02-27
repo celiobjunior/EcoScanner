@@ -8,7 +8,9 @@ struct FeedbackView: View {
     let entry: CollectionEntry
     let profile: UserProfile
     let fact: MaterialFact
+    let streak: Int
     let onDismiss: () -> Void
+    let onDiscard: () -> Void
 
     @State private var showContent = false
     @State private var xpAnimated = false
@@ -31,23 +33,41 @@ struct FeedbackView: View {
                     Divider().padding(.horizontal)
                     disposalSection
 
-                    if profile.currentStreak > 1 {
-                        streakBadge
-                    }
 
-                    Button(action: onDismiss) {
-                        HStack(spacing: .spacing.x2) {
-                            Image(systemName: "viewfinder")
-                            Text("scanner.continue".localized)
-                                .font(.system(size: .fontSize.small, weight: .bold))
+                    HStack(spacing: .spacing.x3) {
+                        Button(action: onDiscard) {
+                            HStack(spacing: .spacing.x2) {
+                                Image(systemName: "trash")
+                                Text("scanner.discard".localized)
+                                    .font(.system(size: .fontSize.small, weight: .bold))
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, .spacing.x4)
+                            .background(
+                                RoundedRectangle(cornerRadius: .borderRadius.large)
+                                    .fill(Color.red)
+                            )
                         }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, .spacing.x4)
-                        .background(
-                            RoundedRectangle(cornerRadius: .borderRadius.large)
-                                .fill(detection.category.color)
-                        )
+
+                        Button(action: onDismiss) {
+                            HStack(spacing: .spacing.x2) {
+                                Image(systemName: "viewfinder")
+                                Text("scanner.continue".localized)
+                                    .font(.system(size: .fontSize.small, weight: .bold))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, .spacing.x4)
+                            .background(
+                                RoundedRectangle(cornerRadius: .borderRadius.large)
+                                    .fill(detection.category.color)
+                            )
+                        }
                     }
                     .padding(.horizontal)
                 }
@@ -98,9 +118,16 @@ private extension FeedbackView {
                     .foregroundColor(.textSecondary)
             }
             Spacer()
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: .iconSize.xxlarge))
-                .foregroundColor(.ecoLight)
+            if streak > 1 {
+                HStack(spacing: .spacing.x2) {
+                    Image(systemName: "flame.fill").foregroundColor(.streakOrange)
+                    Text("feedback.streak_days".localized(with: streak))
+                        .font(.system(size: .fontSize.xsmall, weight: .bold)).foregroundColor(.streakOrange)
+                }
+                .padding(.vertical, .spacing.x2)
+                .padding(.horizontal, .spacing.x3)
+                .background(Capsule().fill(Color.streakOrange.opacity(Double.opacity.badge)))
+            }
         }
         .padding(.horizontal)
     }
@@ -151,12 +178,12 @@ private extension FeedbackView {
         HStack(alignment: .top, spacing: .spacing.x3) {
             Image(systemName: fact.isPositive ? "lightbulb.fill" : "exclamationmark.triangle.fill")
                 .font(.system(size: .iconSize.title))
-                .foregroundColor(fact.isPositive ? .ecoLight : .streakOrange)
+                .foregroundColor(fact.isPositive ? .ecoPrimary : .streakOrange)
 
             VStack(alignment: .leading, spacing: .spacing.base) {
                 Text(fact.isPositive ? "feedback.did_you_know".localized : "feedback.watch_out".localized)
                     .font(.system(size: .fontSize.xsmall, weight: .bold))
-                    .foregroundColor(fact.isPositive ? .ecoLight : .streakOrange)
+                    .foregroundColor(fact.isPositive ? .ecoPrimary : .streakOrange)
                 Text(fact.fact)
                     .font(.system(size: .fontSize.small))
                     .foregroundColor(.textPrimary)
@@ -172,7 +199,7 @@ private extension FeedbackView {
 
     var carbonSection: some View {
         HStack(spacing: .spacing.x3) {
-            Image(systemName: "leaf.fill").font(.system(size: .iconSize.medium)).foregroundColor(.ecoLight)
+            Image(systemName: "leaf.fill").font(.system(size: .iconSize.medium)).foregroundColor(.ecoPrimary)
             VStack(alignment: .leading, spacing: .spacing.micro) {
                 Text("feedback.this_collection_impact".localized)
                     .font(.system(size: .fontSize.xsmall)).foregroundColor(.textSecondary)
@@ -202,15 +229,5 @@ private extension FeedbackView {
         }
         .padding(.horizontal)
     }
-
-    var streakBadge: some View {
-        HStack(spacing: .spacing.x2) {
-            Image(systemName: "flame.fill").foregroundColor(.streakOrange)
-            Text("feedback.streak_days".localized(with: profile.currentStreak))
-                .font(.system(size: .fontSize.small, weight: .bold)).foregroundColor(.streakOrange)
-        }
-        .padding(.vertical, .spacing.x2)
-        .padding(.horizontal, .spacing.x5)
-        .background(Capsule().fill(Color.streakOrange.opacity(Double.opacity.badge)))
-    }
 }
+

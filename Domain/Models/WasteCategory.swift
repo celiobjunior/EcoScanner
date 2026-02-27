@@ -14,15 +14,17 @@ enum WasteCategory: String, CaseIterable, Codable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    // Matches the detector class labels in EcoScanner.mlmodelc metadata:
-    // BIODEGRADABLE, CARDBOARD, GLASS, METAL, PAPER, PLASTIC
+    // Matches the classifier labels in EcoScanner.mlmodelc:
+    // BIODEGRADABLE, CARDBOARD, ELECTRONIC, GLASS, METAL, PAPER, PLASTIC, TEXTILE
     static let modelSupportedCases: [WasteCategory] = [
         .biodegradable,
         .cardboard,
+        .electronic,
         .glass,
         .metal,
         .paper,
         .plastic,
+        .textile,
     ]
 
     var displayName: String {

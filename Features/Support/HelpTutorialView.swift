@@ -8,7 +8,7 @@ struct HelpTutorialView: View {
 
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = true
     @AppStorage("hasCompletedFirstGuidedScan") private var hasCompletedFirstGuidedScan = true
-    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
+    @AppStorage("scanner.autoCaptureEnabled") private var autoCaptureEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -40,9 +40,9 @@ struct HelpTutorialView: View {
                             body: "help.card.categories.body".localized
                         )
 
-                        onboardingResetSection
+                        autoCaptureToggleSection
 
-                        boxToggleSection
+                        onboardingResetSection
                     }
                     .padding(.horizontal, .spacing.x6)
                     .padding(.vertical, .spacing.x6)
@@ -102,45 +102,23 @@ private extension HelpTutorialView {
         )
     }
 
-    var boxToggleSection: some View {
+
+    var autoCaptureToggleSection: some View {
         VStack(alignment: .leading, spacing: .spacing.x3) {
-            Text("help.box.title".localized)
-                .font(.system(size: .fontSize.medium, weight: .bold))
-                .foregroundColor(.ecoSmoke)
-
-            Text("help.box.body".localized)
-                .font(.system(size: .fontSize.small))
-                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textBody))
-                .lineSpacing(.lineSpacing.compact)
-
-            Button {
-                debugBoundingBoxEnabled.toggle()
-            } label: {
+            Toggle(isOn: $autoCaptureEnabled) {
                 HStack(spacing: .spacing.x2) {
-                    Image(systemName: debugBoundingBoxEnabled ? "square.dashed.inset.filled" : "square.dashed")
+                    Image(systemName: "timer")
                         .font(.system(size: .fontSize.smallPlus, weight: .semibold))
-                    Text(debugBoundingBoxEnabled ? "help.box.disable".localized : "help.box.enable".localized)
+                    Text("help.autocapture.title".localized)
                         .font(.system(size: .fontSize.small, weight: .bold))
-                    Spacer(minLength: 0)
-                    Text(debugBoundingBoxEnabled ? "help.box.status.on".localized : "help.box.status.off".localized)
-                        .font(.system(size: .fontSize.xsmall, weight: .bold))
                 }
-                .foregroundColor(debugBoundingBoxEnabled ? .ecoPrimary : .ecoSmoke)
-                .padding(.vertical, .spacing.x3)
-                .padding(.horizontal, .spacing.x4)
-                .background(
-                    Capsule()
-                        .fill(debugBoundingBoxEnabled ? Color.ecoPrimary.opacity(Double.opacity.overlaySoft) : Color.white.opacity(Double.opacity.surfaceSubtle))
-                        .overlay(
-                            Capsule()
-                                .stroke(
-                                    debugBoundingBoxEnabled ? Color.ecoPrimary.opacity(Double.opacity.accentStroke) : Color.white.opacity(Double.opacity.strokeSoft),
-                                    lineWidth: .lineWidth.hairline
-                                )
-                        )
-                )
+                .foregroundColor(.ecoSmoke)
             }
-            .buttonStyle(.plain)
+            .tint(.ecoPrimary)
+
+            Text("help.autocapture.body".localized)
+                .font(.system(size: .fontSize.caption))
+                .foregroundColor(.ecoSmoke.opacity(Double.opacity.textDim))
         }
         .padding(.spacing.x4)
         .background(
