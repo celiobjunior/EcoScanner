@@ -30,7 +30,7 @@ extension Color {
     static let wasteMetal = Color(hex: 0x94A3B8)          // slate
     static let wastePaper = Color(hex: 0x3B82F6)          // blue
     static let wasteCardboard = Color(hex: 0xD97706)      // dark amber
-    static let wasteElectronic = Color(hex: 0xEF4444)     // red
+    static let wasteElectronic = Color(hex: 0xEC4899)     // pink
     static let wasteBiodegradable = Color(hex: 0x8B5CF6)  // violet
     static let wasteTextile = Color(hex: 0xA855F7)        // purple
 
