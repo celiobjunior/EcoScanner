@@ -76,6 +76,14 @@ class UserProfileManager: ObservableObject {
         }
         return pendingUnlockedAchievements
     }
+
+    func undoCollection(_ entry: CollectionEntry) {
+        profile.totalXP = max(0, profile.totalXP - entry.xpEarned)
+        profile.totalCollections = max(0, profile.totalCollections - 1)
+        profile.totalCO2Saved = max(0, profile.totalCO2Saved - entry.co2Saved)
+        modelContext.delete(entry)
+        save()
+    }
 }
 
 // MARK: - Private

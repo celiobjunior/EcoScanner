@@ -79,31 +79,32 @@ Layers
 AVCaptureSession frames
   -> ScannerAVCaptureView.Coordinator.captureOutput(...)
   -> WasteDetector.onImageReceived(buffer:) (~5 FPS)
-  -> VNCoreMLRequest (imageCropAndScaleOption: .scaleFill)
-  -> multi-candidate scoring: 55% confidence + 15% area + 30% center proximity
-  -> ROI: central 60% soft region (scoring weight, not hard filter)
-  -> label mapping to WasteCategory
-  -> focus lock: once a category gets 3 consistent hits, lock onto it
-     - same-category updates allowed if IoU >= 0.30
+  -> VNCoreMLRequest (imageCropAndScaleOption: .centerCrop)
+  -> classification scoring: pure model confidence on cropped frame
+  -> label mapping to WasteCategory (1 of 8)
+  -> focus lock:
+     - 3 consistent hits of the same category to lock
      - different category breaks lock only if score margin > 0.20
      - lock auto-expires after 1.5s of no matching candidate
   -> confidence smoothing:
-     - new display requires confidence >= 0.58 and 3 consistent hits
+     - new display requires confidence >= 0.65 and 3 consistent hits
      - displayed result is kept while confidence >= 0.50
-     - bounding box smoothed with alpha=0.25 (reset if IoU < 0.25)
      - clear after 5 missed frames
   -> @Published currentDetection
-  -> ScannerView detection card + enabled scan button
+  -> ScannerView detection card + enabled auto-capture/scan
 ```
 
-**BOX toggle**: `debugBoundingBoxEnabled` is stored in `@AppStorage` by `ScannerView` and passed to `ScannerAVCaptureView` as a plain `Bool` prop (not `@AppStorage` in the `UIViewRepresentable` — that pattern fails because SwiftUI doesn't observe it as a view dependency). Toggling shows a restart alert since the camera layer needs reinitialization.
+**Auto-Capture**: If `autoCaptureEnabled`, a 3-second timer starts when a detection stabilizes. 
+- UI shows a visual `ProgressView` pill counting down.
+- Tapping the pill sets `autoCaptureUserCancelled = true`, stopping the timer for that object. 
+- If not cancelled, it triggers `confirmDetection()`.
 
 **Accent color**: Set in `Package.swift` as `.asset("AccentColor")` and reinforced by `.tint(.ecoPrimary)` in navigation containers/components.
 
 ### 2) Collection Pipeline
 
 ```text
-User taps scan button
+User taps auto-capture / manual scan / timer fires
   -> WasteDetector.confirmDetection()
   -> UserProfileManager.recordCollection(category, confidence)
      - create CollectionEntry with streak multiplier
@@ -112,7 +113,9 @@ User taps scan button
      - persist in SwiftData
   -> MaterialFact.randomFact(for:)
   -> FeedbackView shown with result + fact + disposal guidance
-  -> Level-up / achievement banners queued on scanner screen
+  -> User choice:
+     a) "Continue Scanning": dismisses overlay, prepares for next item.
+     b) "Discard this scan": calls `UserProfileManager.undoCollection()`, revoking XP/CO2 and deleting entry.
 ```
 
 ### 3) Onboarding and Guided First Scan
@@ -218,24 +221,30 @@ Derived values include `currentLevel`, `nextLevel`, `levelProgress`, `xpToNextLe
 ## ML Model Details (Current)
 
 - Resource: `Resources/MLModel/EcoScanner.mlmodelc`
-- Source model integrated: `/Users/celio/Documents/untitled folder/EcoScannerObjDetec.mlmodel`
-- Source SHA-256: `ee295fd138815de11ed440011ecee16f26dba295d75c11417a0b632ae33ebc9d`
-- Compiled payload size: ~7.0 MB
-- Input: color image `299x299`, RGB (size-flexible)
-- Output: `confidence` (boxes x classes) + `coordinates` (boxes x `[x,y,width,height]`)
-- Model preview type: `objectDetector`
-- Model classes: `BIODEGRADABLE`, `CARDBOARD`, `GLASS`, `METAL`, `PAPER`, `PLASTIC`
+- Source model integrated: `EcoScannerImageClassifier.mlmodel` (CoreML Image Classifier)
+- Compiled payload size: ~30 MB
+- Input: color image `360x360`, RGB (size-flexible depending on vision processing)
+- Output: `classLabel` and `classLabelProbs` (dictionary)
+- Model classes (8): `BIODEGRADABLE`, `CARDBOARD`, `ELECTRONIC`, `GLASS`, `METAL`, `PAPER`, `PLASTIC`, `TEXTILE`
 - Inference gate: `confidence >= 0.50` for candidate processing
-- Display gate: `confidence >= 0.58` to show/switch category
+- Display gate: `confidence >= 0.65` to show/switch category
 - Keep gate: current category can stay visible down to `0.50` (hysteresis)
 - Inference cadence: ~`5 FPS` (`minInferenceInterval = 0.20s`)
-- Region of interest: central `60%` (`x:0.2, y:0.2, width:0.6, height:0.6`)
+- Region of interest: The entire frame is passed to the classifier (bounding box object detection was removed).
 
 ### Label Mapping Behavior
 
 `WasteDetector.mapLabel` uses:
 
-- explicit mapping for current object detector labels:
+- explicit mapping for current classifier labels:
+  - `PLASTIC` -> `.plastic`
+  - `GLASS` -> `.glass`
+  - `METAL` -> `.metal`
+  - `PAPER` -> `.paper`
+  - `CARDBOARD` -> `.cardboard`
+  - `BIODEGRADABLE` -> `.biodegradable`
+  - `ELECTRONIC` -> `.electronic`
+  - `TEXTILE` -> `.textile`
   - `PLASTIC` -> `.plastic`
   - `GLASS` -> `.glass`
   - `METAL` -> `.metal`

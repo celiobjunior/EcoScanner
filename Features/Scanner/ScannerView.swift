@@ -10,7 +10,7 @@ struct ScannerView: View {
     @EnvironmentObject private var cameraManager: CameraManager
     @EnvironmentObject private var wasteDetector: WasteDetector
     @EnvironmentObject private var profileManager: UserProfileManager
-    @AppStorage("scanner.debugBoundingBoxEnabled") private var debugBoundingBoxEnabled = false
+    @AppStorage("scanner.autoCaptureEnabled") private var autoCaptureEnabled = true
 
     @State private var showFeedback = false
     @State private var lastEntry: CollectionEntry?
@@ -21,6 +21,13 @@ struct ScannerView: View {
     @State private var shouldCompleteGuidedFlowAfterFeedback = false
     @State private var hasCompletedGuidedFlow = false
     @State private var isScannerVisible = false
+    @State private var autoCaptureProgress: Double = 0
+    @State private var autoCaptureTimer: Timer? = nil
+    @State private var autoCaptureCategory: WasteCategory? = nil
+    @State private var autoCaptureUserCancelled = false
+
+    private static let autoCaptureDelay: Double = 3.0
+    private static let autoCaptureTickInterval: Double = 0.05
 
     init(
         isGuidedMode: Bool = false,
@@ -32,7 +39,7 @@ struct ScannerView: View {
 
     var body: some View {
         ZStack {
-            ScannerAVCaptureView(debugBoundingBoxEnabled: debugBoundingBoxEnabled)
+            ScannerAVCaptureView()
                 .ignoresSafeArea()
 
             VStack {
@@ -54,6 +61,10 @@ struct ScannerView: View {
                     scanHint
                 }
 
+                if autoCaptureProgress > 0 {
+                    autoCaptureCountdown
+                }
+
                 scanButton
                     .padding(.bottom, .spacing.x12)
             }
@@ -67,7 +78,9 @@ struct ScannerView: View {
                     entry: entry,
                     profile: profileManager.profile,
                     fact: fact,
-                    onDismiss: handleFeedbackDismiss
+                    streak: profileManager.profile.currentStreak,
+                    onDismiss: handleFeedbackDismiss,
+                    onDiscard: handleFeedbackDiscard
                 )
                 .transition(.opacity)
             }
@@ -84,10 +97,23 @@ struct ScannerView: View {
         }
         .onDisappear {
             isScannerVisible = false
+            cancelAutoCapture()
             Task { await cameraManager.stopCapture() }
         }
         .onChange(of: wasteDetector.currentDetection != nil) { _, hasDetection in
             scanPulse = hasDetection
+            if hasDetection {
+                startAutoCaptureIfNeeded()
+            } else {
+                cancelAutoCapture()
+                autoCaptureUserCancelled = false
+            }
+        }
+        .onChange(of: wasteDetector.currentDetection?.category) { _, newCategory in
+            if let newCategory, newCategory != autoCaptureCategory {
+                autoCaptureUserCancelled = false
+                restartAutoCapture(for: newCategory)
+            }
         }
         .onChange(of: cameraManager.runStatus) { _, status in
             guard isScannerVisible else { return }
@@ -177,7 +203,6 @@ private extension ScannerView {
             }
         }
         .padding(.horizontal, .spacing.x6)
-        .padding(.top, .spacing.x4)
     }
 
     var statusInfoContainer: some View {
@@ -241,7 +266,7 @@ private extension ScannerView {
 
                 Text("scanner.confidence".localized(with: Int(detection.confidence * 100)))
                     .font(.system(size: .fontSize.xsmall))
-                    .foregroundColor(.ecoSmoke)
+                    .foregroundColor(.primary)
             }
         }
         .padding(.horizontal, .spacing.x6)
@@ -257,11 +282,35 @@ private extension ScannerView {
             Text("scanner.hint".localized)
                 .font(.system(size: .fontSize.small))
         }
-        .foregroundColor(.ecoSmoke)
+        .foregroundColor(.primary)
         .padding(.horizontal, .spacing.x6)
         .padding(.vertical, .spacing.x3)
         .scannerCapsuleClearInteractiveGlass()
         .padding(.bottom, .spacing.x6)
+    }
+
+    var autoCaptureCountdown: some View {
+        Button {
+            cancelAutoCaptureByUser()
+            #if canImport(UIKit)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
+        } label: {
+            HStack(spacing: .spacing.x3) {
+                ProgressView(value: autoCaptureProgress)
+                    .progressViewStyle(LinearProgressViewStyle(tint: .ecoPrimary))
+
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: .iconSize.large))
+                    .foregroundColor(.primary.opacity(Double.opacity.textSecondary))
+            }
+            .padding(.horizontal, .spacing.x5)
+            .padding(.vertical, .spacing.x3)
+            .frame(maxWidth: 240)
+            .scannerCapsuleClearInteractiveGlass()
+        }
+        .buttonStyle(.plain)
+        .padding(.bottom, .spacing.x3)
     }
 
     var scanButton: some View {
@@ -326,6 +375,7 @@ private extension ScannerView {
 private extension ScannerView {
 
     func performScan() {
+        cancelAutoCapture()
         guard let detection = wasteDetector.confirmDetection() else { return }
 
         let entry = profileManager.recordCollection(
@@ -366,6 +416,16 @@ private extension ScannerView {
         onGuidedScanCompleted?()
     }
 
+    func handleFeedbackDiscard() {
+        if let entry = lastEntry {
+            profileManager.undoCollection(entry)
+        }
+        showFeedback = false
+        lastDetection = nil
+        lastEntry = nil
+        lastFact = nil
+    }
+
     func presentNotifications() {
         if let newLevel = profileManager.consumeLevelUp() {
             enqueueBanner(
@@ -399,6 +459,47 @@ private extension ScannerView {
         }
     }
 
+    // MARK: - Auto-capture
+
+    func startAutoCaptureIfNeeded() {
+        guard autoCaptureEnabled else { return }
+        guard !autoCaptureUserCancelled else { return }
+        guard autoCaptureTimer == nil, !showFeedback else { return }
+        guard let category = wasteDetector.currentDetection?.category else { return }
+        autoCaptureCategory = category
+        autoCaptureProgress = 0
+
+        let timer = Timer.scheduledTimer(withTimeInterval: Self.autoCaptureTickInterval, repeats: true) { [self] _ in
+            Task { @MainActor in
+                guard self.autoCaptureTimer != nil else { return }
+                self.autoCaptureProgress += Self.autoCaptureTickInterval / Self.autoCaptureDelay
+                if self.autoCaptureProgress >= 1.0 {
+                    self.cancelAutoCapture()
+                    self.performScan()
+                }
+            }
+        }
+        autoCaptureTimer = timer
+    }
+
+    func cancelAutoCapture() {
+        autoCaptureTimer?.invalidate()
+        autoCaptureTimer = nil
+        autoCaptureProgress = 0
+        autoCaptureCategory = nil
+    }
+
+    func cancelAutoCaptureByUser() {
+        autoCaptureUserCancelled = true
+        cancelAutoCapture()
+    }
+
+    func restartAutoCapture(for category: WasteCategory) {
+        cancelAutoCapture()
+        autoCaptureCategory = category
+        startAutoCaptureIfNeeded()
+    }
+
 }
 
 private extension View {
@@ -407,7 +508,7 @@ private extension View {
     }
 
     func scannerCapsuleClearInteractiveGlass() -> some View {
-        self.glassEffect(.clear.interactive(), in: .capsule(style: .continuous))
+        self.glassEffect(.regular.interactive(), in: .capsule(style: .continuous))
     }
 }
 

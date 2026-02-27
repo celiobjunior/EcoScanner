@@ -25,14 +25,14 @@ extension Color {
     static let achievementLocked = Color(hex: 0xC86C66)
 
     // Waste categories
-    static let wastePlastic = Color(hex: 0xFDE68A)
-    static let wasteGlass = Color(hex: 0x99F6E4)
-    static let wasteMetal = Color(hex: 0xCBD5E1)
-    static let wastePaper = Color(hex: 0x93C5FD)
-    static let wasteCardboard = Color(hex: 0xEBC9A8)
-    static let wasteElectronic = Color(hex: 0xFCA5A5)
-    static let wasteBiodegradable = Color(hex: 0xC4B5FD)
-    static let wasteTextile = Color(hex: 0xD8B4FE)
+    static let wastePlastic = Color(hex: 0xF59E0B)       // amber
+    static let wasteGlass = Color(hex: 0x14B8A6)          // teal
+    static let wasteMetal = Color(hex: 0x94A3B8)          // slate
+    static let wastePaper = Color(hex: 0x3B82F6)          // blue
+    static let wasteCardboard = Color(hex: 0xD97706)      // dark amber
+    static let wasteElectronic = Color(hex: 0xEC4899)     // pink
+    static let wasteBiodegradable = Color(hex: 0x8B5CF6)  // violet
+    static let wasteTextile = Color(hex: 0xA855F7)        // purple
 
     // Gradients
     static let ecoGradientStart = Color(hex: 0xD9F99C)

@@ -221,7 +221,7 @@ private extension OnboardingView {
 
             Text(category.displayName)
                 .font(.system(size: .fontSize.small, weight: .semibold))
-                .foregroundColor(.ecoSmoke)
+                .foregroundColor(.ecoInk)
                 .lineLimit(1)
                 .minimumScaleFactor(0.85)
         }
@@ -230,11 +230,7 @@ private extension OnboardingView {
         .padding(.horizontal, .spacing.x3)
         .background(
             RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
-                .fill(category.color.opacity(Double.opacity.glow))
-                .overlay(
-                    RoundedRectangle(cornerRadius: .borderRadius.smallPlus)
-                        .stroke(category.color.opacity(Double.opacity.pageIndicator), lineWidth: .lineWidth.hairline)
-                )
+                .fill(Color.white)
         )
     }
 

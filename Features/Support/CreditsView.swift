@@ -9,21 +9,45 @@ struct CreditsView: View {
     private let datasetLinks: [CreditLink] = [
         CreditLink(
             icon: "tray.full.fill",
-            titleKey: "credits.dataset.one.title",
-            detailKey: "credits.dataset.one.detail",
-            url: "https://humansintheloop.org/resources/datasets/recycling-dataset/"
+            titleKey: "credits.dataset.1.title",
+            detailKey: "credits.dataset.1.detail",
+            url: "https://www.kaggle.com/datasets/sumn2u/garbage-classification-v2"
         ),
         CreditLink(
-            icon: "shippingbox.fill",
-            titleKey: "credits.dataset.two.title",
-            detailKey: "credits.dataset.two.detail",
-            url: "https://data.mendeley.com/datasets/z732f9pwxt/1"
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.2.title",
+            detailKey: "credits.dataset.2.detail",
+            url: "https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification"
         ),
         CreditLink(
-            icon: "archivebox.fill",
-            titleKey: "credits.dataset.three.title",
-            detailKey: "credits.dataset.three.detail",
-            url: "https://zenodo.org/records/3587843"
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.3.title",
+            detailKey: "credits.dataset.3.detail",
+            url: "https://www.kaggle.com/datasets/mostafaabla/garbage-classification"
+        ),
+        CreditLink(
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.4.title",
+            detailKey: "credits.dataset.4.detail",
+            url: "https://www.kaggle.com/datasets/vencerlanz09/plastic-paper-garbage-bag-synthetic-images"
+        ),
+        CreditLink(
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.5.title",
+            detailKey: "credits.dataset.5.detail",
+            url: "https://www.kaggle.com/datasets/farzadnekouei/trash-type-image-dataset"
+        ),
+        CreditLink(
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.6.title",
+            detailKey: "credits.dataset.6.detail",
+            url: "https://www.kaggle.com/datasets/hassnainzaidi/garbage-classification"
+        ),
+        CreditLink(
+            icon: "tray.full.fill",
+            titleKey: "credits.dataset.7.title",
+            detailKey: "credits.dataset.7.detail",
+            url: "https://www.kaggle.com/datasets/manonstr/tipe-webscraping"
         ),
     ]
 

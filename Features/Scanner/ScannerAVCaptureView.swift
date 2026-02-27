@@ -8,8 +8,8 @@ import Combine
 struct ScannerAVCaptureView: UIViewRepresentable {
 
     @EnvironmentObject private var cameraManager: CameraManager
+
     @EnvironmentObject private var wasteDetector: WasteDetector
-    var debugBoundingBoxEnabled: Bool
 
     func makeUIView(context: Context) -> UIView {
         context.coordinator.makeUIView(with: cameraManager.captureSession)
@@ -17,7 +17,6 @@ struct ScannerAVCaptureView: UIViewRepresentable {
 
     func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.updateFrame(with: uiView.frame.size)
-        context.coordinator.setDebugEnabled(debugBoundingBoxEnabled)
     }
 
     func makeCoordinator() -> Coordinator {
@@ -47,16 +46,11 @@ extension ScannerAVCaptureView {
         let queue = DispatchQueue(label: "ScannerAVCapture", autoreleaseFrequency: .workItem)
 
         private var capturePreview: AVCaptureVideoPreviewLayer? = nil
-        private var selectedDebugBoxLayer: CAShapeLayer? = nil
         private var rotationCoordinator: AVCaptureDevice.RotationCoordinator? = nil
         private var rotationCoordinatorDeviceID: String? = nil
         private var lastPreviewRotationAngle: CGFloat? = nil
         private var lastCaptureRotationAngle: CGFloat? = nil
-        private var latestDebugFrame: DetectionDebugFrame? = nil
-        private var latestFallbackDetection: WasteDetectionResult? = nil
-        private var isDebugEnabled = false
         private var subscriptions = Set<AnyCancellable>()
-        private var hasBoundDetector = false
         private var hasBoundOrientationEvents = false
         private var didStartOrientationNotifications = false
 
@@ -88,38 +82,16 @@ extension ScannerAVCaptureView {
             capturePreview.videoGravity = .resizeAspectFill
             uiView.layer.addSublayer(capturePreview)
 
-            let selectedLayer = CAShapeLayer()
-            selectedLayer.fillColor = UIColor.clear.cgColor
-            selectedLayer.lineWidth = .lineWidth.debugBox
-            selectedLayer.lineDashPattern = nil
-            selectedLayer.shadowColor = UIColor.black.cgColor
-            selectedLayer.shadowOpacity = Float(Double.opacity.overlayStrong)
-            selectedLayer.shadowRadius = .shadow.smallRadius
-            selectedLayer.shadowOffset = .zero
-            selectedLayer.isHidden = true
-            uiView.layer.addSublayer(selectedLayer)
-
             self.capturePreview = capturePreview
-            self.selectedDebugBoxLayer = selectedLayer
-            bindDetectorIfNeeded()
             bindOrientationUpdatesIfNeeded()
             resetRotationState()
             applyOrientation()
-            refreshDebugOverlay()
             return uiView
         }
 
         func updateFrame(with size: CGSize) {
             capturePreview?.frame = CGRect(origin: .zero, size: size)
-            selectedDebugBoxLayer?.frame = CGRect(origin: .zero, size: size)
             applyOrientation()
-            refreshDebugOverlay()
-        }
-
-        func setDebugEnabled(_ enabled: Bool) {
-            guard isDebugEnabled != enabled else { return }
-            isDebugEnabled = enabled
-            refreshDebugOverlay()
         }
 
         func applyOrientation() {
@@ -239,103 +211,6 @@ extension ScannerAVCaptureView {
             rotationCoordinatorDeviceID = nil
             lastPreviewRotationAngle = nil
             lastCaptureRotationAngle = nil
-        }
-
-        func bindDetectorIfNeeded() {
-            guard !hasBoundDetector else { return }
-            hasBoundDetector = true
-
-            wasteDetector.$debugFrame
-                .sink { [weak self] frame in
-                    self?.latestDebugFrame = frame
-                    self?.refreshDebugOverlay()
-                }
-                .store(in: &subscriptions)
-
-            wasteDetector.$currentDetection
-                .sink { [weak self] detection in
-                    self?.latestFallbackDetection = detection
-                    self?.refreshDebugOverlay()
-                }
-                .store(in: &subscriptions)
-        }
-
-        func refreshDebugOverlay() {
-            updateDebugOverlay(
-                with: latestDebugFrame,
-                fallbackDetection: latestFallbackDetection,
-                enabled: isDebugEnabled
-            )
-        }
-
-        func updateDebugOverlay(
-            with debugFrame: DetectionDebugFrame?,
-            fallbackDetection: WasteDetectionResult?,
-            enabled: Bool
-        ) {
-            guard let preview = capturePreview,
-                  let selectedLayer = selectedDebugBoxLayer else { return }
-
-            guard enabled else {
-                selectedLayer.isHidden = true
-                return
-            }
-
-            let selectedCandidate = debugFrame?.selectedCandidate
-
-            let selectedBox = selectedCandidate?.boundingBox ?? fallbackDetection?.boundingBox
-            let selectedColor = UIColor(
-                selectedCandidate?.category.color ?? fallbackDetection?.category.color ?? .ecoLight
-            ).withAlphaComponent(Double.opacity.almostOpaque)
-
-            render(
-                layer: selectedLayer,
-                box: selectedBox,
-                color: selectedColor,
-                in: preview
-            )
-        }
-
-        func render(
-            layer: CAShapeLayer,
-            box: CGRect?,
-            color: UIColor,
-            in preview: AVCaptureVideoPreviewLayer
-        ) {
-            guard let box, let layerRect = layerRect(from: box, in: preview) else {
-                layer.isHidden = true
-                return
-            }
-
-            layer.strokeColor = color.cgColor
-            layer.path = UIBezierPath(roundedRect: layerRect, cornerRadius: .borderRadius.small).cgPath
-            layer.isHidden = false
-        }
-
-        func layerRect(from visionBoundingBox: CGRect, in preview: AVCaptureVideoPreviewLayer) -> CGRect? {
-            let box = visionBoundingBox.standardized
-            guard box.width > 0, box.height > 0 else { return nil }
-
-            // Vision output is normalized with origin in bottom-left.
-            // Metadata rect expects normalized top-left origin.
-            let metadataRect = CGRect(
-                x: box.minX,
-                y: 1 - box.maxY,
-                width: box.width,
-                height: box.height
-            )
-
-            var layerRect = preview.layerRectConverted(fromMetadataOutputRect: metadataRect).standardized
-            if layerRect.isNull || layerRect.isEmpty || layerRect.width <= 1 || layerRect.height <= 1 {
-                return nil
-            }
-
-            layerRect = layerRect.intersection(preview.bounds)
-            guard !layerRect.isNull, !layerRect.isEmpty, layerRect.width > 1, layerRect.height > 1 else {
-                return nil
-            }
-
-            return layerRect
         }
     }
 }

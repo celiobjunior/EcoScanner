@@ -11,7 +11,7 @@ struct ScannerGuideView: View {
     var body: some View {
         ScannerCornerFrameShape(cornerLength: cornerLength)
             .stroke(
-                isActive ? Color.ecoLight : Color.ecoSmoke.opacity(Double.opacity.almostOpaque),
+                isActive ? Color.ecoLight : Color.primary.opacity(Double.opacity.almostOpaque),
                 style: StrokeStyle(
                     lineWidth: lineWidth,
                     lineCap: .round,

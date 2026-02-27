@@ -81,6 +81,8 @@ private extension MainTabView {
         }
         .tint(.ecoPrimary)
         .navigationTitle("app.name".localized)
+        .toolbarColorScheme(.dark, for: .navigationBar)
+        .preferredColorScheme(.dark)
         #if os(macOS)
         .navigationSplitViewColumnWidth(min: 180, ideal: 220)
         #endif

@@ -154,6 +154,7 @@ private extension EcoHistoryView {
                     Image(systemName: "star.fill").font(.system(size: .iconSize.tiny)).foregroundColor(.xpGold)
                     Text("common.xp_gain".localized(with: entry.xpEarned)).font(.system(size: .fontSize.xsmall, weight: .bold)).foregroundColor(.xpGold)
                 }
+                Text(entry.timestamp, style: .date).font(.system(size: .fontSize.tiny)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow))
                 Text(entry.timestamp, style: .time).font(.system(size: .fontSize.tiny)).foregroundColor(.ecoSmoke.opacity(Double.opacity.textLow))
             }
         }
