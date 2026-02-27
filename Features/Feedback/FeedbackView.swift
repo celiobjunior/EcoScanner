@@ -59,6 +59,10 @@ struct FeedbackView: View {
                                 Image(systemName: "viewfinder")
                                 Text("scanner.continue".localized)
                                     .font(.system(size: .fontSize.small, weight: .bold))
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
