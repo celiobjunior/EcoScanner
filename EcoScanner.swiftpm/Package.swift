@@ -43,8 +43,7 @@ let package = Package(
             name: "AppModule",
             path: ".",
             exclude: [
-                "LLM.md",
-                "liquidglass.md"
+                "Docs"
             ],
             sources: [
                 "MyApp.swift",
